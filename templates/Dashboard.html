@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Model Metrics Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#000000",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#191919"
+                    },
+                    fontFamily: {
+                        display: "Space Grotesk"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex h-screen w-screen fixed top-0 left-0">
+<div class="flex flex-col w-64 bg-[#111a22] p-4 text-white flex-shrink-0">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Workspace logo with abstract geometric pattern" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXD43qk7DNAtBmfACWrL-nRoU78wQ3fU7gXPvNc95WqC1kIvEVYFmqmyRypBKk71eEaIFayaIqrzgsPNTqQrOJPvQ13PCZ7bKRrfn-WVM7apS1_3gdn6aewDTY8TU7UcgmnIRCIKLDYTFE3gQPHCXYRqgmIhjIEfk8pGFR66u1zNFtd0XglevD8SSnP6nvrC87yZqKOO0_cmmEKOgU4jjxhtl49P0onQjig-XYqF08Zd8t5_Gmh2RpvfPf2qt8XOmO8pd50xyt_zY");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-medium leading-normal">ML Workspace</h1>
+<p class="text-[#92adc9] text-sm font-normal leading-normal">user@example.com</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 mt-4">
+<div class="relative flex items-center gap-3 px-3 py-2 rounded-lg bg-[#233648]">
+<a href="Dashboard.html" aria-label="Dashboard" class="absolute inset-0 z-10 opacity-0"></a>
+<span class="material-symbols-outlined text-white" style="font-size: 24px;">dashboard</span>
+<p class="text-white text-sm font-medium leading-normal">Dashboard</p>
+</div>
+<div class="relative flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#233648] rounded-lg">
+<a href="Models.html" aria-label="Models" class="absolute inset-0 z-10 opacity-0"></a>
+<span class="material-symbols-outlined text-white" style="font-size: 24px; font-variation-settings: 'FILL' 1;">neurology</span>
+<p class="text-white text-sm font-medium leading-normal">Models</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#233648] rounded-lg">
+<span class="material-symbols-outlined text-white" style="font-size: 24px;">database</span>
+<p class="text-white text-sm font-medium leading-normal">Datasets</p>
+</div>
+</div>
+</div>
+</div>
+<main class="flex-1 overflow-y-auto">
+<div class="p-8">
+<div class="flex justify-between items-start mb-8">
+<div class="flex flex-col gap-2">
+<p class="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Model Metrics</p>
+<p class="text-gray-600 dark:text-[#92adc9] text-base font-normal leading-normal">Visualize and compare performance metrics across models.</p>
+</div>
+</div>
+<div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="lg:col-span-2">
+<label class="block text-gray-800 dark:text-white text-base font-medium leading-normal pb-2" for="model-name">Model Name</label>
+<div class="relative">
+<span class="material-symbols-outlined text-gray-500 dark:text-[#92adc9] absolute left-4 top-1/2 -translate-y-1/2">search</span>
+<input class="form-input w-full rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] pl-12 pr-4 text-base font-normal leading-normal" id="model-name" placeholder="Search by model name..." type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-gray-800 dark:text-white text-base font-medium leading-normal pb-2" for="model-type">Model Type</label>
+<select class="form-select w-full rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] px-4 text-base font-normal leading-normal" id="model-type">
+<option>All Types</option>
+<option>Classification</option>
+<option>Regression</option>
+<option>Clustering</option>
+<option>Object Detection</option>
+</select>
+</div>
+<div class="flex items-end">
+<button class="w-full px-6 py-3 h-14 rounded-lg text-white font-semibold text-base bg-primary hover:bg-primary/90">
+                                Apply Filters
+                            </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] aspect-square flex flex-col">
+<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">ROC Curve</h2>
+<div class="flex-grow flex items-center justify-center">
+<img alt="ROC Curve Chart" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxX005f1EmvRZRYQDW6Z8mpFmPo4x-e4htgBUdjBLfflRdFNJfzTCbJEC_OXMrTuJ1a0M04zqBMey2JjarZRU1V47EqZeQ97fGbmrrTJIyVkq3cfY1Nw6oCyIMYICraLxK1LTJsUVLN68RFp2JelMmPT952NTqh7Kjy_fKtjcprey0143RpMLR8YUpyDGsuH0bLDu3NXUJBI5hIEkVyVBxdyrhMSZhQtlQ1trAI8ikVxFZYVr0cboQ_aHzmvQB7wkmApe13IhFr24"/>
+</div>
+</div>
+<div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] aspect-square flex flex-col">
+<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Precision-Recall Curve</h2>
+<div class="flex-grow flex items-center justify-center">
+<img alt="Precision-Recall Curve Chart" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJ5ctcZHyr3zFkFIPAs4tE4Pop5gcR_Sdca-yfGnrBsI--gufBZffJHjCG0ezpjGE6iuT02S-e7YAicDdLYyNGWH3j4dQIunEUuWxqcG7ZAKmDmPJmF5CmIEqL1FI_BaTGM-lA2iavZYxn76pQkQd9q2WBHIK5swUeQVoyfcL6lvT1KqG-PVhl2WkyzfFZuXgOHLyg7ceeA2b05zupyaMQnAeShhUzExMA1gSPUzXhYARD34mjzT2r_nOGcVuQ93drClEuEdXBXyI"/>
+</div>
+</div>
+<div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] aspect-square flex flex-col">
+<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Accuracy Over Time</h2>
+<div class="flex-grow flex items-center justify-center">
+<img alt="Accuracy Over Time Chart" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3H7OIBL7x9EQSFVMjpvNwpSq-BGfKfWBwrAOd_n6N6e2UZ9913mQPWETRDUL3hRixtSRMTQgJS8cBAXq7WdGZOTrp0JDDnQA92Ejp4IHr4hK_kFv6kkV7VWm8Gs5gj1_Tscgb0OfxDHvPqINhLwlmKs8vHFaj6pLJRlhCqhVP8yVJpESkGnGWQqIdgOXgii-jmCCgXE_7QayXYMvB4rrT5DjZHT528K4KIK_4Z7t5Y-af1Kvdb461_St2XmrVphPy2UcKscIFEws"/>
+</div>
+</div>
+<div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] aspect-square flex flex-col">
+<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Confusion Matrix</h2>
+<div class="flex-grow flex items-center justify-center">
+<img alt="Confusion Matrix" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBumF_HJrWs63ORdoR1AeVn7-gsYXkv_Fa39bfjpoGylbNnjinM2ZXnWEQmsMFf1sP-pTcRbo-SGG9y4pcXC0g_wCc4N31Z3OYmbHCyOczqeRwqwmQ8pbvyVj9UZR01qe4bovQSHcK4nvnprA2mABiR8ZiLZ6kim4Bw56cERzRFD0m41sqos5foeG0hIuqbENTfSTz2xyXVRbpvLTYYBDf1RyLRefThWA-FTES2-5HB68WYhGpwx-siGkGJwl4rxhEVgy_0zkxZyhU"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>
