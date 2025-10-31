@@ -22,9 +22,66 @@ def models():
 
 @app.route('/cadastrar_modelo', methods=['POST'])
 def cadastrar_modelo():
-    nome_teste = request.form['nome_teste']
-    nome_modelo = request.form['nome_modelo']
-    registry.cadastrar_modelo(nome_teste, nome_modelo)
+    nome_teste = request.form['id_teste']
+    nome_modelo = request.form['modelo_ml_utilizado']
+
+    if nome_modelo == 'Regressão Logística':
+        registry.cadastrar_logistic(
+            nome_teste,
+            request.form.get('estrategia_preprocessamento'),
+            request.form.get('estrategia_validacao'),
+            request.form.get('logreg_penalty'),
+            request.form.get('logreg_C'),
+            request.form.get('logreg_solver'),
+            request.form.get('logreg_class_weight'),
+            request.form.get('logreg_max_iter')
+        )
+    elif nome_modelo == 'KNN':
+        registry.cadastrar_knn(
+            nome_teste,
+            request.form.get('estrategia_preprocessamento'),
+            request.form.get('estrategia_validacao'),
+            request.form.get('knn_n_neighbors'),
+            request.form.get('knn_weights'),
+            request.form.get('knn_metric'),
+            request.form.get('knn_p')
+        )
+    elif nome_modelo == 'SVC':
+        registry.cadastrar_svc(
+            nome_teste,
+            request.form.get('estrategia_preprocessamento'),
+            request.form.get('estrategia_validacao'),
+            request.form.get('svm_C'),
+            request.form.get('svm_kernel'),
+            request.form.get('svm_gamma'),
+            request.form.get('svm_degree'),
+            request.form.get('svm_class_weight'),
+            request.form.get('svm_probability')
+        )
+    elif nome_modelo == 'DecisionTreeClassifier':
+        registry.cadastrar_tree(
+            nome_teste,
+            request.form.get('estrategia_preprocessamento'),
+            request.form.get('estrategia_validacao'),
+            request.form.get('tree_criterion'),
+            request.form.get('tree_max_depth'),
+            request.form.get('tree_min_samples_split'),
+            request.form.get('tree_min_samples_leaf'),
+            request.form.get('tree_class_weight')
+        )
+    elif nome_modelo == 'RandomForestClassifier':
+        registry.cadastrar_rf(
+            nome_teste,
+            request.form.get('estrategia_preprocessamento'),
+            request.form.get('estrategia_validacao'),
+            request.form.get('rf_n_estimators'),
+            request.form.get('rf_max_depth'),
+            request.form.get('rf_criterion'),
+            request.form.get('rf_min_samples_split'),
+            request.form.get('rf_min_samples_leaf'),
+            request.form.get('rf_class_weight'),
+            request.form.get('rf_oob_score')
+        )
     return redirect('/Models.html')
 
 if __name__ == "__main__":

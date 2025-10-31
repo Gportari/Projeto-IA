@@ -1,82 +1,30 @@
 <!DOCTYPE html>
-
-<html class="" lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Model Configuration</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "background-light": "#f7f7f7", "background-dark": "#191919"}, fontFamily: {display: "Space Grotesk"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
-<style>
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-        }input[type="range"]::-webkit-slider-runnable-track {
-            background-color: #324d67;
-            height: 4px;
-            border-radius: 2px;
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                primary: "#000000",
+                "background-light": "#f7f7f7",
+                "background-dark": "#191919"
+            },
+            fontFamily: {display: "Space Grotesk"},
+            borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}
         }
-        input[type="range"]::-moz-range-track {
-            background-color: #324d67;
-            height: 4px;
-            border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            margin-top: -6px;background-color: #137fec;
-            height: 16px;
-            width: 16px;
-            border-radius: 9999px;
-            cursor: pointer;
-        }
-        input[type="range"]::-moz-range-thumb {
-            border: none;
-            background-color: #137fec;
-            height: 16px;
-            width: 16px;
-            border-radius: 9999px;
-            cursor: pointer;
-        }.switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 24px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #324d67;
-            transition: .4s;
-            border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #137fec;
-        }
-        input:checked + .slider:before {
-            transform: translateX(16px);
-        }
-    </style>
+    }
+};
+</script>
+<!-- Adiciona o CSS externo -->
+<link rel="stylesheet" href="/static/style-models.css">
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display">
 <div class="flex h-screen w-screen fixed top-0 left-0">
@@ -405,8 +353,8 @@
 <div class="flex-1 bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col">
 <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Registered Models</h2>
 <div class="overflow-x-auto flex-grow">
-<table class="w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
-<thead class="text-xs text-gray-800 dark:text-white uppercase bg-gray-50 dark:bg-[#192633]">
+<table id="models-table" class="w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
+<thead id="models-table-head" class="text-xs text-gray-800 dark:text-white uppercase bg-gray-50 dark:bg-[#192633]">
 <tr>
 <th class="px-6 py-3" scope="col">Model Name</th>
 <th class="px-6 py-3" scope="col">Type</th>
@@ -414,13 +362,7 @@
 </tr>
 </thead>
 <tbody id="model-table-body">
-    {% for modelo in model_list %}
-    <tr class="bg-white dark:bg-[#111a22] border-b dark:border-[#324d67]">
-        <th class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap" scope="row">{{ modelo.nome_teste }}</th>
-        <td class="px-6 py-4">{{ modelo.nome_modelo }}</td>
-        <td class="px-6 py-4">-</td>
-    </tr>
-    {% endfor %}
+    <!-- Conteúdo será preenchido via JavaScript -->
 </tbody>
 </table>
 </div>
@@ -429,26 +371,10 @@
 </div>
 </main>
 </div>
-<!-- Adiciona JS para alternar os formulários -->
+<!-- Exporta model_list para o JS -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filter = document.getElementById('model-type-filter');
-    const forms = {
-        logistic: document.getElementById('form-logistic'),
-        knn: document.getElementById('form-knn'),
-        svc: document.getElementById('form-svc'),
-        tree: document.getElementById('form-tree'),
-        rf: document.getElementById('form-rf')
-    };
-    function showForm(type) {
-        Object.keys(forms).forEach(key => {
-            forms[key].style.display = (key === type) ? '' : 'none';
-        });
-    }
-    filter.addEventListener('change', function() {
-        showForm(filter.value);
-    });
-    showForm(filter.value); // Inicializa com o selecionado
-});
+window.model_list = {{ model_list | tojson }};
 </script>
+<!-- Adiciona JS externo para alternar os formulários -->
+<script src="/static/models.js"></script>
 </body></html>
