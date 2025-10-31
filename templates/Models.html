@@ -374,7 +374,27 @@ tailwind.config = {
 <!-- Exporta model_list para o JS -->
 <script>
 window.model_list = {{ model_list | tojson }};
+// ... Sua função generateDynamicTableHeader() estaria aqui se não estivesse no arquivo models.js
+// ... Sua lógica de switchModelForm() estaria aqui se não estivesse no arquivo models.js
+
+// Lógica de execução
+document.addEventListener('DOMContentLoaded', () => {
+    // A função que gera o cabeçalho dinâmico deve ser chamada aqui!
+    if (window.model_list && Object.keys(window.model_list).length > 0) {
+        generateDynamicTableHeader(); // ESTA É A CHAMADA PRINCIPAL
+    } else {
+        // Fallback caso a lista esteja vazia
+        document.getElementById('models-table-head').innerHTML = '<tr><th class="px-6 py-3" scope="col">Nenhum modelo configurado.</th></tr>';
+    }
+
+    // Inicializa o seletor de formulários
+    const selector = document.getElementById('model-type-filter');
+    if (selector) {
+        selector.addEventListener('change', switchModelForm);
+        switchModelForm(); 
+    }
+});
 </script>
-<!-- Adiciona JS externo para alternar os formulários -->
 <script src="/static/models.js"></script>
-</body></html>
+</body>
+</html>
