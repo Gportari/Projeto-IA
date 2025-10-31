@@ -126,64 +126,280 @@
 </div>
 <div class="flex-grow grid grid-cols-5 gap-8">
 <div class="col-span-2 flex flex-col gap-6">
-<form method="POST" action="/cadastrar_modelo">
-    <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
-        <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Model Identity</h2>
-        <div class="flex flex-col gap-6">
-            <label class="flex flex-col">
-                <p class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Model Name</p>
-                <input name="nome_teste" class="form-input w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[15px] text-base font-normal leading-normal" placeholder="Enter a unique name for your model"/>
-            </label>
-            <label class="flex flex-col">
-                <p class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Model Type</p>
-                <select name="nome_modelo" class="form-select w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[15px] text-base font-normal leading-normal">
-                    <option value="Classification">Classification</option>
-                    <option value="Regression">Regression</option>
-                    <option value="Clustering">Clustering</option>
-                </select>
-            </label>
-        </div>
+    <!-- Filtro de tipo de modelo -->
+    <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] mb-2">
+        <label class="flex flex-col">
+            <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Model Type Filter</span>
+            <select id="model-type-filter" class="form-select w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-12 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[10px] text-base font-normal leading-normal">
+                <option value="logistic">Regressão Logística</option>
+                <option value="knn">KNN</option>
+                <option value="svc">SVC</option>
+                <option value="tree">DecisionTreeClassifier</option>
+                <option value="rf">RandomForestClassifier</option>
+            </select>
+        </label>
     </div>
-    <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
-<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Hyperparameters</h2>
-<div class="flex flex-col gap-8">
-<div class="flex flex-col gap-2">
-<div class="flex justify-between items-center">
-<p class="text-gray-800 dark:text-white text-base font-medium leading-normal">Learning Rate</p>
-<span class="text-gray-900 dark:text-white font-medium text-sm">0.001</span>
-</div>
-<input class="w-full h-2 rounded-lg appearance-none cursor-pointer" max="0.1" min="0.0001" step="0.0001" type="range" value="0.001"/>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<label class="flex flex-col">
-<p class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Epochs</p>
-<input class="form-input w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[15px] text-base font-normal leading-normal" type="number" value="100"/>
-</label>
-<label class="flex flex-col">
-<p class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Batch Size</p>
-<input class="form-input w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-14 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[15px] text-base font-normal leading-normal" type="number" value="32"/>
-</label>
-</div>
-<div class="flex justify-between items-center">
-<p class="text-gray-800 dark:text-white text-base font-medium leading-normal">Early Stopping</p>
-<label class="switch">
-<input checked="" type="checkbox"/>
-<span class="slider"></span>
-</label>
-</div>
-</div>
-</div>
-<div class="flex-shrink-0 sticky bottom-0 mt-8 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-t border-gray-200 dark:border-[#324d67]">
-<div class="flex justify-end gap-4">
-<button type="button" class="px-6 py-3 rounded-lg text-gray-800 dark:text-white font-semibold text-base bg-gray-200/80 dark:bg-[#324d67] hover:bg-gray-300/80 dark:hover:bg-[#415b74]">
-                Cancel
-            </button>
-<button type="submit" class="px-6 py-3 rounded-lg text-white font-semibold text-base bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed">
-                Save Configuration
-            </button>
-</div>
-</div>
-</form>
+
+    <!-- Formulário Regressão Logística -->
+    <form id="form-logistic" method="POST" action="/cadastrar_modelo" style="">
+        <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Regressão Logística</h2>
+            <div class="flex flex-col gap-6">
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">ID_Teste</span>
+                    <input name="id_teste" class="form-input w-full rounded-lg ..." type="text" placeholder="ID do teste"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Modelo_ML_Utilizado</span>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="Regressão Logística" readonly/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Estrategia_Preprocessamento</span>
+                    <input name="estrategia_preprocessamento" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Estrategia_Validacao</span>
+                    <input name="estrategia_validacao" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">logreg_penalty</span>
+                    <input name="logreg_penalty" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">logreg_C</span>
+                    <input name="logreg_C" class="form-input w-full rounded-lg ..." type="number" step="0.0001"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">logreg_solver</span>
+                    <input name="logreg_solver" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">logreg_class_weight</span>
+                    <input name="logreg_class_weight" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">logreg_max_iter</span>
+                    <input name="logreg_max_iter" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+            <button type="button" class="px-6 py-3 rounded-lg ...">Cancel</button>
+            <button type="submit" class="px-6 py-3 rounded-lg ...">Save Configuration</button>
+        </div>
+    </form>
+
+    <!-- Formulário KNN -->
+    <form id="form-knn" method="POST" action="/cadastrar_modelo" style="display:none;">
+        <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">KNN</h2>
+            <div class="flex flex-col gap-6">
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">ID_Teste</span>
+                    <input name="id_teste" class="form-input w-full rounded-lg ..." type="text" placeholder="ID do teste"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Modelo_ML_Utilizado</span>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="KNN" readonly/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Estrategia_Preprocessamento</span>
+                    <input name="estrategia_preprocessamento" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Estrategia_Validacao</span>
+                    <input name="estrategia_validacao" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">knn_n_neighbors</span>
+                    <input name="knn_n_neighbors" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">knn_weights</span>
+                    <input name="knn_weights" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">knn_metric</span>
+                    <input name="knn_metric" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">knn_p</span>
+                    <input name="knn_p" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+            <button type="button" class="px-6 py-3 rounded-lg ...">Cancel</button>
+            <button type="submit" class="px-6 py-3 rounded-lg ...">Save Configuration</button>
+        </div>
+    </form>
+
+    <!-- Formulário SVC -->
+    <form id="form-svc" method="POST" action="/cadastrar_modelo" style="display:none;">
+        <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">SVC (Support Vector Machine)</h2>
+            <div class="flex flex-col gap-6">
+                <label class="flex flex-col">
+                    <span>ID_Teste</span>
+                    <input name="id_teste" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Modelo_ML_Utilizado</span>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="SVC" readonly/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Preprocessamento</span>
+                    <input name="estrategia_preprocessamento" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Validacao</span>
+                    <input name="estrategia_validacao" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_C</span>
+                    <input name="svm_C" class="form-input w-full rounded-lg ..." type="number" step="0.0001"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_kernel</span>
+                    <input name="svm_kernel" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_gamma</span>
+                    <input name="svm_gamma" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_degree</span>
+                    <input name="svm_degree" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_class_weight</span>
+                    <input name="svm_class_weight" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>svm_probability</span>
+                    <select name="svm_probability" class="form-select w-full rounded-lg ...">
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+            <button type="button" class="px-6 py-3 rounded-lg ...">Cancel</button>
+            <button type="submit" class="px-6 py-3 rounded-lg ...">Save Configuration</button>
+        </div>
+    </form>
+
+    <!-- Formulário DecisionTreeClassifier -->
+    <form id="form-tree" method="POST" action="/cadastrar_modelo" style="display:none;">
+        <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">DecisionTreeClassifier</h2>
+            <div class="flex flex-col gap-6">
+                <label class="flex flex-col">
+                    <span>ID_Teste</span>
+                    <input name="id_teste" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Modelo_ML_Utilizado</span>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="DecisionTreeClassifier" readonly/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Preprocessamento</span>
+                    <input name="estrategia_preprocessamento" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Validacao</span>
+                    <input name="estrategia_validacao" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>tree_criterion</span>
+                    <input name="tree_criterion" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>tree_max_depth</span>
+                    <input name="tree_max_depth" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>tree_min_samples_split</span>
+                    <input name="tree_min_samples_split" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>tree_min_samples_leaf</span>
+                    <input name="tree_min_samples_leaf" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>tree_class_weight</span>
+                    <input name="tree_class_weight" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+            <button type="button" class="px-6 py-3 rounded-lg ...">Cancel</button>
+            <button type="submit" class="px-6 py-3 rounded-lg ...">Save Configuration</button>
+        </div>
+    </form>
+
+    <!-- Formulário RandomForestClassifier -->
+    <form id="form-rf" method="POST" action="/cadastrar_modelo" style="display:none;">
+        <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">RandomForestClassifier</h2>
+            <div class="flex flex-col gap-6">
+                <label class="flex flex-col">
+                    <span>ID_Teste</span>
+                    <input name="id_teste" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Modelo_ML_Utilizado</span>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="RandomForestClassifier" readonly/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Preprocessamento</span>
+                    <input name="estrategia_preprocessamento" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>Estrategia_Validacao</span>
+                    <input name="estrategia_validacao" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_n_estimators</span>
+                    <input name="rf_n_estimators" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_max_depth</span>
+                    <input name="rf_max_depth" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_criterion</span>
+                    <input name="rf_criterion" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_min_samples_split</span>
+                    <input name="rf_min_samples_split" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_min_samples_leaf</span>
+                    <input name="rf_min_samples_leaf" class="form-input w-full rounded-lg ..." type="number"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_class_weight</span>
+                    <input name="rf_class_weight" class="form-input w-full rounded-lg ..." type="text"/>
+                </label>
+                <label class="flex flex-col">
+                    <span>rf_oob_score</span>
+                    <select name="rf_oob_score" class="form-select w-full rounded-lg ...">
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+            <button type="button" class="px-6 py-3 rounded-lg ...">Cancel</button>
+            <button type="submit" class="px-6 py-3 rounded-lg ...">Save Configuration</button>
+        </div>
+    </form>
+    <!-- ...remover o formulário antigo e demais código da coluna esquerda... -->
+
 </div>
 <div class="col-span-3 flex flex-col">
 <div class="flex-1 bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col">
@@ -213,4 +429,26 @@
 </div>
 </main>
 </div>
+<!-- Adiciona JS para alternar os formulários -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filter = document.getElementById('model-type-filter');
+    const forms = {
+        logistic: document.getElementById('form-logistic'),
+        knn: document.getElementById('form-knn'),
+        svc: document.getElementById('form-svc'),
+        tree: document.getElementById('form-tree'),
+        rf: document.getElementById('form-rf')
+    };
+    function showForm(type) {
+        Object.keys(forms).forEach(key => {
+            forms[key].style.display = (key === type) ? '' : 'none';
+        });
+    }
+    filter.addEventListener('change', function() {
+        showForm(filter.value);
+    });
+    showForm(filter.value); // Inicializa com o selecionado
+});
+</script>
 </body></html>
