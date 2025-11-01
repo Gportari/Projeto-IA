@@ -350,32 +350,29 @@ tailwind.config = {
 
 </div>
 <div class="col-span-3 flex flex-col">
-<div class="flex-1 bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col">
-<h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Registered Models</h2>
-<div class="overflow-x-auto flex-grow">
-<table id="models-table" class="w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
-<thead id="models-table-head" class="text-xs text-gray-800 dark:text-white uppercase bg-gray-50 dark:bg-[#192633]">
-<tr>
-<th class="px-6 py-3" scope="col">Model Name</th>
-<th class="px-6 py-3" scope="col">Type</th>
-<th class="px-6 py-3" scope="col">Parameters</th>
-</tr>
-</thead>
-<tbody id="model-table-body">
-    <!-- Conteúdo será preenchido via JavaScript -->
-</tbody>
-</table>
-</div>
-</div>
+    <div class="flex-1 bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col">
+        <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Registered Models</h2>
+        <div class="overflow-x-auto flex-grow">
+            <table id="models-table" class="w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
+                <thead id="models-table-head" class="text-xs text-gray-800 dark:text-white uppercase bg-gray-50 dark:bg-[#192633]">
+                    <tr>
+                        <th class="px-6 py-3" scope="col">Model Name</th>
+                        <th class="px-6 py-3" scope="col">Type</th>
+                        <th class="px-6 py-3" scope="col">Parameters</th>
+                    </tr>
+                </thead>
+                <tbody id="model-table-body">
+                    <!-- Conteúdo será preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </div>
 </main>
 </div>
-<!-- Exporta model_list para o JS -->
 <script>
-window.model_list = {{ model_list | tojson }};
-// ... Sua função generateDynamicTableHeader() estaria aqui se não estivesse no arquivo models.js
-// ... Sua lógica de switchModelForm() estaria aqui se não estivesse no arquivo models.js
+window.model_list = {{ model_list | tojson | safe }};
 
 // Lógica de execução
 document.addEventListener('DOMContentLoaded', () => {
@@ -390,8 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializa o seletor de formulários
     const selector = document.getElementById('model-type-filter');
     if (selector) {
-        selector.addEventListener('change', switchModelForm);
-        switchModelForm(); 
+        selector.addEventListener('change', function() {
+            const selectedModel = this.value;
+            switchModelFormAndRenderTable(selectedModel);
+        });
+        const initialModel = selector.value || 'logistic';
+        switchModelFormAndRenderTable(initialModel);
     }
 });
 </script>

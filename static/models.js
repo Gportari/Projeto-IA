@@ -7,17 +7,35 @@ document.addEventListener('DOMContentLoaded', function() {
         tree: document.getElementById('form-tree'),
         rf: document.getElementById('form-rf')
     };
+    
     function showForm(type) {
         Object.keys(forms).forEach(key => {
-            forms[key].style.display = (key === type) ? '' : 'none';
+            if (forms[key]) {
+                forms[key].style.display = (key === type) ? '' : 'none';
+            }
         });
     }
+    
+    // Carregar modelos do servidor
+    function loadModelsFromServer() {
+        fetch('/api/models')
+            .then(response => response.json())
+            .then(data => {
+                // Atualizar a variável global com os dados do servidor
+                window.saved_models = data;
+                // Atualizar a tabela com os modelos carregados
+                updateModelsTable(filter.value);
+            })
+            .catch(error => console.error('Erro ao carregar modelos:', error));
+    }
+    
     filter.addEventListener('change', function() {
         showForm(filter.value);
         updateModelsTable(filter.value);
     });
+    
     showForm(filter.value); // Inicializa com o selecionado
-    updateModelsTable(filter.value); // Inicializa tabela
+    loadModelsFromServer(); // Carrega modelos do servidor
 });
 // Este é o conteúdo do que o backend deve exportar via: window.model_list = {{ model_list | tojson }};
 
@@ -104,86 +122,104 @@ window.model_list = {
 // Variáveis de controle globais (ou definidas no escopo do módulo)
 const commonTestColumns = ['ID_Teste', 'Estrategia_Preprocessamento', 'Estrategia_Validacao'];
 const fixedMetricColumns = ['Acuracia_Media', 'F1_Score_Medio', 'Desvio_Padrao_F1'];
+window.saved_models = []; // Array para armazenar os modelos carregados do servidor
 
 /**
- * 1. Gera o cabeçalho e preenche o corpo da tabela de resultados
- * para o modelo atualmente SELECIONADO no filtro.
- * @param {string} modelKey - A chave do modelo ('logistic', 'knn', etc.).
+ * Atualiza a tabela de modelos com base no tipo de modelo selecionado
+ * @param {string} modelType - O tipo de modelo selecionado ('logistic', 'knn', etc.)
  */
-function renderResultsTable(modelKey) {
-    const modelDefinition = window.model_list[modelKey];
-    const registeredTests = window.registered_tests || []; // Usa os dados de testes registrados
+function updateModelsTable(modelType) {
+    const modelDefinition = window.model_list[modelType];
+    const savedModels = window.saved_models || [];
     
     if (!modelDefinition) return;
 
-    const head = document.getElementById('models-table-head');
-    const body = document.getElementById('model-table-body');
-    head.innerHTML = '';
-    body.innerHTML = '';
+    const tableHead = document.getElementById('models-table-head');
+    const tableBody = document.getElementById('model-table-body');
+    
+    // Limpar tabela
+    tableHead.innerHTML = '';
+    tableBody.innerHTML = '';
 
-    // --- 1. Definir as Colunas para este Modelo ---
-    // Colunas Iniciais + Colunas Comuns + Parâmetros do Modelo + Métricas
-    const modelColumns = [
-        ...commonTestColumns,
-        ...modelDefinition.params, // Apenas os parâmetros do modelo selecionado!
-        ...fixedMetricColumns 
+    // Mapear tipos de modelo para nomes de exibição
+    const modelTypeMap = {
+        'logistic': 'Regressão Logística',
+        'knn': 'KNN',
+        'svc': 'SVC',
+        'tree': 'DecisionTreeClassifier',
+        'rf': 'RandomForestClassifier'
+    };
+    
+    // Filtrar modelos pelo tipo selecionado
+    const filteredModels = savedModels.filter(model => {
+        return model.nome_modelo === modelTypeMap[modelType];
+    });
+    
+    // Definir colunas para este tipo de modelo
+    const columns = [
+        'nome_teste',
+        'estrategia_preprocessamento',
+        'estrategia_validacao',
+        ...modelDefinition.params
     ];
-
-    // --- 2. Gerar o Cabeçalho (<thead>) ---
+    
+    // Criar cabeçalho da tabela
     const headerRow = document.createElement('tr');
     
-    modelColumns.forEach(columnName => {
+    columns.forEach(column => {
         const th = document.createElement('th');
         th.classList.add('px-6', 'py-3');
         th.setAttribute('scope', 'col');
         
-        let display_name = columnName.replace('_', ' ');
-
-        // Trata os nomes dos hiperparâmetros para remover o prefixo do modelo (logreg_, knn_, etc.)
-        if (modelDefinition.params.includes(columnName)) {
-            // Separa pelo primeiro '_' e pega o resto (Ex: logreg_C -> C)
-            display_name = columnName.split('_').slice(1).join('_');
-            if (display_name === '') display_name = columnName; // Para casos como knn_p
+        // Formatar nome da coluna para exibição
+        let displayName = column;
+        if (column.includes('_')) {
+            // Para parâmetros de modelo, remover o prefixo (ex: logreg_C -> C)
+            if (modelDefinition.params.includes(column)) {
+                displayName = column.split('_').slice(1).join('_');
+            } else {
+                // Para outras colunas, substituir underscore por espaço
+                displayName = column.replace(/_/g, ' ');
+            }
         }
         
-        th.textContent = display_name.toUpperCase();
+        th.textContent = displayName.toUpperCase();
         headerRow.appendChild(th);
     });
     
-    head.appendChild(headerRow);
-
-
-    // --- 3. Preencher o Corpo (<tbody>) ---
-    // Filtra os testes registrados para mostrar SÓ os do modelo selecionado
-    const filteredTests = registeredTests.filter(test => test.Modelo_ML_Utilizado === modelKey);
-
-    filteredTests.forEach(test => {
-        const dataRow = document.createElement('tr');
-        dataRow.classList.add('bg-white', 'border-b', 'dark:bg-[#1f2d3a]', 'dark:border-[#2a3746]');
-        
-        modelColumns.forEach(col => {
-            const td = document.createElement('td');
-            td.classList.add('px-6', 'py-4', 'whitespace-nowrap');
-            
-            // Pega o valor do teste para a coluna atual (se não existir, é NULO/vazio)
-            const value = test[col] !== undefined ? test[col] : '—'; 
-            
-            td.textContent = value;
-            dataRow.appendChild(td);
-        });
-
-        body.appendChild(dataRow);
-    });
+    tableHead.appendChild(headerRow);
     
-    // Se não houver testes registrados para o modelo selecionado
-    if (filteredTests.length === 0) {
-         body.innerHTML = `
-            <tr class="bg-white dark:bg-[#1f2d3a]">
-                <td colspan="${modelColumns.length}" class="px-6 py-4 text-center text-gray-500 dark:text-[#92adc9]">
-                    Nenhum teste registrado para o modelo ${modelDefinition.name}.
-                </td>
-            </tr>
-         `;
+    // Preencher corpo da tabela
+    if (filteredModels.length > 0) {
+        filteredModels.forEach(model => {
+            const row = document.createElement('tr');
+            row.classList.add('bg-white', 'border-b', 'dark:bg-[#1f2d3a]', 'dark:border-[#2a3746]');
+            
+            columns.forEach(column => {
+                const td = document.createElement('td');
+                td.classList.add('px-6', 'py-4', 'whitespace-nowrap');
+                
+                // Obter valor da coluna do modelo
+                const value = model[column] !== undefined ? model[column] : '—';
+                
+                td.textContent = value;
+                row.appendChild(td);
+            });
+            
+            tableBody.appendChild(row);
+        });
+    } else {
+        // Mensagem quando não há modelos
+        const emptyRow = document.createElement('tr');
+        emptyRow.classList.add('bg-white', 'dark:bg-[#1f2d3a]');
+        
+        const emptyCell = document.createElement('td');
+        emptyCell.classList.add('px-6', 'py-4', 'text-center', 'text-gray-500', 'dark:text-[#92adc9]');
+        emptyCell.setAttribute('colspan', columns.length);
+        emptyCell.textContent = `Nenhum modelo ${modelTypeMap[modelType]} encontrado.`;
+        
+        emptyRow.appendChild(emptyCell);
+        tableBody.appendChild(emptyRow);
     }
 }
 
@@ -211,7 +247,7 @@ function switchModelFormAndRenderTable() {
     }
     
     // --- Lógica de Renderização Dinâmica da Tabela ---
-    renderResultsTable(selectedModel);
+    updateModelsTable(selectedModel);
 }
 
 
@@ -230,6 +266,37 @@ document.addEventListener('DOMContentLoaded', () => {
 // Execução no carregamento da página
 // ----------------------------------------------------------------------------------
 
+// Função para carregar os modelos da API
+function fetchModels() {
+    fetch('/api/models')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao carregar modelos');
+            }
+            return response.json();
+        })
+        .then(data => {
+            window.saved_models = data;
+            // Atualiza a tabela com os modelos carregados
+            const currentModelType = document.getElementById('model-type-filter').value || 'logistic';
+            updateModelsTable(currentModelType);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar modelos:', error);
+        });
+}
+
+/**
+ * Gera o cabeçalho dinâmico da tabela de modelos
+ * Esta função é chamada na inicialização da página
+ */
+function generateDynamicTableHeader() {
+    // Esta função é substituída pela updateModelsTable que já gera o cabeçalho
+    // Mantemos esta função para compatibilidade com o código existente
+    const currentModelType = document.getElementById('model-type-filter').value || 'logistic';
+    updateModelsTable(currentModelType);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Gera o cabeçalho dinâmico assim que o DOM estiver pronto
     if (window.model_list && Object.keys(window.model_list).length > 0) {
@@ -242,11 +309,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Inicializa o seletor de formulários
     const selector = document.getElementById('model-type-filter');
     if (selector) {
-        selector.addEventListener('change', switchModelForm);
-        // Exibe o formulário inicial (Regressão Logística, que é o primeiro no SELECT)
-        switchModelForm(); 
+        selector.addEventListener('change', function() {
+            const selectedModel = this.value;
+            switchModelFormAndRenderTable(selectedModel);
+        });
+        // Exibe o formulário inicial e carrega os modelos
+        const initialModel = selector.value || 'logistic';
+        switchModelFormAndRenderTable(initialModel);
+        fetchModels();
     }
     
-    // NOTA: Você precisará de outra função aqui que lê os dados dos testes SALVOS e preenche o <tbody> (model-table-body)
-    // Usando o array finalColumns gerado em generateDynamicTableHeader() para mapear os dados.
+    // 3. Adiciona evento aos formulários para recarregar modelos após cadastro
+    const formElements = document.querySelectorAll('form');
+    formElements.forEach(form => {
+        form.addEventListener('submit', function() {
+            // Recarregar modelos após um pequeno delay para permitir o processamento do servidor
+            setTimeout(fetchModels, 1000);
+        });
+    });
 });

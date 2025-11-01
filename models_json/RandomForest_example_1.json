@@ -1,0 +1,14 @@
+{
+    "id": "56789012-5678-9012-5678-901256789012",
+    "timestamp": "2025-10-31T22:34:00.000000",
+    "nome_teste": "Teste Random Forest 1",
+    "nome_modelo": "RandomForestClassifier",
+    "estrategia_preprocessamento": "StandardScaler",
+    "estrategia_validacao": "Stratified K-Fold (k=5)",
+    "rf_n_estimators": "100",
+    "rf_criterion": "gini",
+    "rf_max_depth": "None",
+    "rf_min_samples_split": "2",
+    "rf_min_samples_leaf": "1",
+    "rf_bootstrap": "true"
+}

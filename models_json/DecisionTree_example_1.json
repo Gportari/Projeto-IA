@@ -1,0 +1,12 @@
+{
+    "id": "45678901-4567-8901-4567-890145678901",
+    "timestamp": "2025-10-31T22:33:00.000000",
+    "nome_teste": "Teste Decision Tree 1",
+    "nome_modelo": "DecisionTreeClassifier",
+    "estrategia_preprocessamento": "RobustScaler",
+    "estrategia_validacao": "Cross-Validation (k=10)",
+    "tree_criterion": "gini",
+    "tree_max_depth": "10",
+    "tree_min_samples_split": "2",
+    "tree_min_samples_leaf": "1"
+}
