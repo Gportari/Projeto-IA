@@ -1,0 +1,12 @@
+{
+    "id": "23456789-2345-6789-2345-678923456789",
+    "timestamp": "2025-10-31T22:31:00.000000",
+    "nome_teste": "Teste KNN 1",
+    "nome_modelo": "KNN",
+    "estrategia_preprocessamento": "MinMaxScaler",
+    "estrategia_validacao": "Stratified K-Fold",
+    "knn_n_neighbors": "5",
+    "knn_weights": "uniform",
+    "knn_metric": "euclidean",
+    "knn_p": "2"
+}

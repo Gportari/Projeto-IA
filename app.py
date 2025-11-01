@@ -1,8 +1,15 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 from model_registry import ModelRegistry
+import os
+import json
 
 app = Flask(__name__)
 registry = ModelRegistry()
+
+# Garantir que o diretório models_json exista
+models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models_json')
+if not os.path.exists(models_dir):
+    os.makedirs(models_dir)
 
 @app.route('/')
 def home():
@@ -18,7 +25,14 @@ def Dashboard():
 
 @app.route('/Models.html', methods=['GET'])
 def models():
-    return render_template('Models.html', model_list=registry.listar_modelos())
+    # Carregar modelos dos arquivos JSON
+    models_list = registry.listar_modelos()
+    return render_template('Models.html', model_list=models_list)
+
+@app.route('/api/models', methods=['GET'])
+def get_models_api():
+    # Endpoint API para obter a lista de modelos em formato JSON
+    return jsonify(registry.listar_modelos())
 
 @app.route('/cadastrar_modelo', methods=['POST'])
 def cadastrar_modelo():
