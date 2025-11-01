@@ -5,56 +5,65 @@ from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-class KerasLogisticRegression:
-    def __init__(self, learning_rate=0.01, epochs=100, batch_size=32, 
-                 l1_regularization=0.0, l2_regularization=0.0):
+class KerasDecisionTree:
+    def __init__(self, max_depth=5, min_samples_split=2, learning_rate=0.01, epochs=100, batch_size=32):
         """
-        Initialize Keras-based Logistic Regression model
+        Initialize Keras-based Decision Tree model using a neural network
         
         Parameters:
         -----------
+        max_depth : int
+            Maximum depth of the tree (controls network complexity)
+        min_samples_split : int
+            Minimum samples required to split (controls network width)
         learning_rate : float
             Learning rate for the optimizer
         epochs : int
             Number of training epochs
         batch_size : int
             Batch size for training
-        l1_regularization : float
-            L1 regularization strength (similar to 'l1' penalty in sklearn)
-        l2_regularization : float
-            L2 regularization strength (similar to 'l2' penalty in sklearn)
         """
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
-        self.l1_regularization = l1_regularization
-        self.l2_regularization = l2_regularization
         self.model = None
         self.history = None
     
     def build_model(self, input_shape):
         """
-        Build the Keras model for logistic regression
+        Build the Keras model for Decision Tree-like behavior
         
         Parameters:
         -----------
         input_shape : tuple
             Shape of the input features
         """
-        # Configure regularization
-        regularizer = None
-        if self.l1_regularization > 0 and self.l2_regularization > 0:
-            regularizer = keras.regularizers.L1L2(l1=self.l1_regularization, l2=self.l2_regularization)
-        elif self.l1_regularization > 0:
-            regularizer = keras.regularizers.L1(l1=self.l1_regularization)
-        elif self.l2_regularization > 0:
-            regularizer = keras.regularizers.L2(l2=self.l2_regularization)
+        # Calculate network complexity based on tree parameters
+        # More depth = more layers, more min_samples_split = fewer neurons
+        n_layers = min(10, max(3, self.max_depth))
+        width_factor = max(1, 32 // self.min_samples_split)
+        base_units = 32 * width_factor
         
-        # Build model
-        model = keras.Sequential([
-            layers.Input(shape=input_shape),
-            layers.Dense(1, activation='sigmoid', kernel_regularizer=regularizer)
-        ])
+        # Build model with multiple layers
+        model = keras.Sequential()
+        model.add(layers.Input(shape=input_shape))
+        
+        # Add layers with decreasing width to mimic tree structure
+        for i in range(n_layers):
+            units = base_units // (2 ** min(i, 3))  # Decrease units by power of 2
+            model.add(layers.Dense(
+                units=max(8, units),
+                activation='relu',
+                kernel_initializer='he_normal'
+            ))
+            # Add dropout for regularization
+            if i < n_layers - 1:  # No dropout on final hidden layer
+                model.add(layers.Dropout(0.2))
+        
+        # Output layer for binary classification
+        model.add(layers.Dense(1, activation='sigmoid'))
         
         # Compile model
         model.compile(
@@ -68,7 +77,7 @@ class KerasLogisticRegression:
     
     def fit(self, X, y, validation_split=0.2):
         """
-        Train the logistic regression model
+        Train the Decision Tree-like model
         
         Parameters:
         -----------
@@ -94,12 +103,20 @@ class KerasLogisticRegression:
         if self.model is None:
             self.build_model(X.shape[1:])
         
+        # Early stopping to prevent overfitting
+        early_stopping = keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=10,
+            restore_best_weights=True
+        )
+        
         # Train model
         self.history = self.model.fit(
             X, y_formatted,
             epochs=self.epochs,
             batch_size=self.batch_size,
             validation_split=validation_split,
+            callbacks=[early_stopping],
             verbose=0
         )
         
@@ -172,14 +189,8 @@ class KerasLogisticRegression:
         metrics : dict
             Dictionary containing evaluation metrics
         """
-        # Convert labels if needed
-        y_formatted = np.array(y)
-        if np.any(y_formatted == -1):
-            y_formatted = np.where(y_formatted == -1, 0, y_formatted)
-        
         # Get predictions
         y_pred = self.predict(X)
-        y_pred_formatted = np.where(y_pred == -1, 0, y_pred)
         
         # Calculate metrics
         metrics = {
@@ -193,7 +204,7 @@ class KerasLogisticRegression:
 
 def create_model_from_config(config, training_params=None):
     """
-    Create a Keras Logistic Regression model from configuration
+    Create a Keras Decision Tree model from configuration
     
     Parameters:
     -----------
@@ -204,7 +215,7 @@ def create_model_from_config(config, training_params=None):
     
     Returns:
     --------
-    model : KerasLogisticRegression
+    model : KerasDecisionTree
         Configured model instance
     """
     # Set default training parameters
@@ -212,33 +223,24 @@ def create_model_from_config(config, training_params=None):
         training_params = {}
     
     # Extract parameters from config
+    max_depth = int(config.get('tree_max_depth', 5))
+    min_samples_split = int(config.get('tree_min_samples_split', 2))
     learning_rate = float(training_params.get('learning_rate', 0.01))
     epochs = int(training_params.get('epochs', 100))
     batch_size = int(training_params.get('batch_size', 32))
     
-    # Map regularization parameters
-    penalty = config.get('logreg_penalty', 'l2')
-    C = float(config.get('logreg_C', 1.0))
-    
-    # Convert C to regularization strength (inverse relationship)
-    reg_strength = 1.0 / C if C > 0 else 0.0
-    
-    # Configure L1 and L2 regularization based on penalty
-    l1_reg = reg_strength if penalty == 'l1' else 0.0
-    l2_reg = reg_strength if penalty == 'l2' else 0.0
-    
     # Create and return model
-    return KerasLogisticRegression(
+    return KerasDecisionTree(
+        max_depth=max_depth,
+        min_samples_split=min_samples_split,
         learning_rate=learning_rate,
         epochs=epochs,
-        batch_size=batch_size,
-        l1_regularization=l1_reg,
-        l2_regularization=l2_reg
+        batch_size=batch_size
     )
 
 def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_params=None):
     """
-    Train and evaluate a Keras Logistic Regression model
+    Train and evaluate a Keras Decision Tree model
     
     Parameters:
     -----------
@@ -271,7 +273,7 @@ def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_
     
     # Add model name to results
     results = {
-        'name': model_config.get('name', 'Logistic Regression'),
+        'name': model_config.get('name', 'Decision Tree'),
         **metrics
     }
     
