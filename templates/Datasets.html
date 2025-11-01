@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Datasets Repository</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/style-models.css">
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex h-screen w-screen fixed top-0 left-0">
+    <div class="flex flex-col w-64 bg-[#111a22] p-4 text-white flex-shrink-0">
+        <div class="flex flex-col gap-4">
+            <div class="flex gap-3 items-center">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXD43qk7DNAtBmfACWrL-nRoU78wQ3fU7gXPvNc95WqC1kIvEVYFmqmyRypBKk71eEaIFayaIqrzgsPNTqQrOJPvQ13PCZ7bKRrfn-WVM7apS1_3gdn6aewDTY8TU7UcgmnIRCIKLDYTFE3gQPHCXYRqgmIhjIEfk8pGFR66u1zNFtd0XglevD8SSnP6nvrC87yZqKOO0_cmmEKOgU4jjxhtl49P0onQjig-XYqF08Zd8t5_Gmh2RpvfPf2qt8XOmO8pd50xyt_zY");'></div>
+                <div class="flex flex-col">
+                    <h1 class="text-white text-base font-medium leading-normal">ML Workspace</h1>
+                    <p class="text-[#92adc9] text-sm font-normal leading-normal">user@example.com</p>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 mt-4">
+                <!-- Dashboard item -->
+                <div class="relative flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#233648] rounded-lg">
+                    <a href="Dashboard.html" aria-label="Dashboard" class="absolute inset-0 z-10 opacity-0"></a>
+                    <span class="material-symbols-outlined text-white" style="font-size: 24px;">dashboard</span>
+                    <p class="text-white text-sm font-medium leading-normal">Dashboard</p>
+                </div>
+                <!-- Models item -->
+                <div class="relative flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#233648] rounded-lg">
+                    <a href="Models.html" aria-label="Models" class="absolute inset-0 z-10 opacity-0"></a>
+                    <span class="material-symbols-outlined text-white" style="font-size: 24px;">neurology</span>
+                    <p class="text-white text-sm font-medium leading-normal">Models</p>
+                </div>
+                <!-- Datasets item: ativo -->
+                <div class="relative flex items-center gap-3 px-3 py-2 rounded-lg bg-[#233648]">
+                    <a href="Datasets.html" aria-label="Datasets" class="absolute inset-0 z-10 opacity-0"></a>
+                    <span class="material-symbols-outlined text-white" style="font-size: 24px; font-variation-settings: 'FILL' 1;">database</span>
+                    <p class="text-white text-sm font-medium leading-normal">Datasets</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col gap-1 mt-auto"></div>
+    </div>
+    <main class="flex-1 overflow-y-auto">
+        <div class="max-w-7xl mx-auto p-8 flex flex-col h-full">
+            <div class="flex-shrink-0">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex flex-col gap-2">
+                        <p class="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Datasets Repository</p>
+                        <p class="text-gray-600 dark:text-[#92adc9] text-base font-normal leading-normal">Manage your Excel files for model training.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-grow flex flex-col">
+                <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col">
+                    <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Available Datasets</h2>
+                    <!-- Formulário de upload -->
+                    <form id="upload-form" class="flex items-center gap-4 mb-6" enctype="multipart/form-data" method="POST" action="/upload_dataset">
+                        <input type="file" name="file" accept=".xlsx" class="form-input w-auto rounded-lg" required>
+                        <input type="text" name="custom_name" placeholder="Nome do arquivo (sem .xlsx)" class="form-input w-48 rounded-lg" required>
+                        <button type="submit" class="px-6 py-2 rounded-lg bg-primary text-white font-semibold">Salvar</button>
+                    </form>
+                    <div class="overflow-x-auto flex-grow">
+                        <table class="w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
+                            <thead class="text-xs text-gray-800 dark:text-white uppercase bg-gray-50 dark:bg-[#192633]">
+                                <tr>
+                                    <th class="px-6 py-3" scope="col">File Name</th>
+                                    <th class="px-6 py-3" scope="col">Size</th>
+                                    <th class="px-6 py-3" scope="col">Last Modified</th>
+                                    <th class="px-6 py-3" scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in files %}
+                                <tr>
+                                    <td class="px-6 py-4">
+                                        <form method="POST" action="/rename_dataset" class="inline-flex gap-2">
+                                            <input type="hidden" name="old_name" value="{{ file.name }}">
+                                            <input type="text" name="new_name" value="{{ file.name }}" class="form-input w-40 rounded-lg bg-transparent text-inherit" required>
+                                            <button type="submit" class="text-blue-600 hover:underline">Rename</button>
+                                        </form>
+                                    </td>
+                                    <td class="px-6 py-4">{{ file.size }} KB</td>
+                                    <td class="px-6 py-4">{{ file.mtime }}</td>
+                                    <td class="px-6 py-4">
+                                        <form method="POST" action="/delete_dataset" style="display:inline;">
+                                            <input type="hidden" name="filename" value="{{ file.name }}">
+                                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td class="px-6 py-4" colspan="4">No datasets available yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

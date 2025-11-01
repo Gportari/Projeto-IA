@@ -1,8 +1,29 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
 from model_registry import ModelRegistry
+import pandas as pd
+import os
+import datetime
 
 app = Flask(__name__)
+app.secret_key = "secret"  # Necessário para flash messages
 registry = ModelRegistry()
+
+DATASET_FOLDER = os.path.join(os.path.dirname(__file__), 'datasets')
+os.makedirs(DATASET_FOLDER, exist_ok=True)
+
+def list_datasets():
+    files = []
+    for fname in os.listdir(DATASET_FOLDER):
+        if fname.endswith('.xlsx'):
+            path = os.path.join(DATASET_FOLDER, fname)
+            stat = os.stat(path)
+            files.append({
+                'name': fname,
+                'size': int(stat.st_size / 1024),
+                'mtime': datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M')
+            })
+    return files
 
 @app.route('/')
 def home():
@@ -18,7 +39,16 @@ def Dashboard():
 
 @app.route('/Models.html', methods=['GET'])
 def models():
-    return render_template('Models.html', model_list=registry.listar_modelos())
+    model_list = registry.model_definitions()  # Definição dos modelos (dict)
+    registered_tests = registry.listar_modelos()  # Lista dos modelos cadastrados (list of dicts)
+    print("DEBUG: model_list =", model_list)
+    print("DEBUG: registered_tests =", registered_tests)
+    return render_template('Models.html', model_list=model_list, registered_tests=registered_tests)
+
+@app.route('/Datasets.html')
+def datasets():
+    files = list_datasets()
+    return render_template('Datasets.html', files=files)
 
 @app.route('/cadastrar_modelo', methods=['POST'])
 def cadastrar_modelo():
@@ -83,6 +113,47 @@ def cadastrar_modelo():
             request.form.get('rf_oob_score')
         )
     return redirect('/Models.html')
+
+@app.route('/upload_dataset', methods=['POST'])
+def upload_dataset():
+    file = request.files.get('file')
+    custom_name = request.form.get('custom_name', '').strip()
+    if file and file.filename.endswith('.xlsx') and custom_name:
+        filename = secure_filename(custom_name) + '.xlsx'
+        save_path = os.path.join(DATASET_FOLDER, filename)
+        file.save(save_path)
+        flash("Arquivo carregado com sucesso!", "success")
+        return redirect(url_for('datasets'))
+    flash("Arquivo inválido. Envie um arquivo .xlsx e informe o nome.", "danger")
+    return redirect(url_for('datasets'))
+
+@app.route('/delete_dataset', methods=['POST'])
+def delete_dataset():
+    filename = request.form.get('filename')
+    if filename:
+        path = os.path.join(DATASET_FOLDER, filename)
+        if os.path.exists(path):
+            os.remove(path)
+            flash("Arquivo removido.", "success")
+        else:
+            flash("Arquivo não encontrado.", "danger")
+    return redirect(url_for('datasets'))
+
+@app.route('/rename_dataset', methods=['POST'])
+def rename_dataset():
+    old_name = request.form.get('old_name')
+    new_name = request.form.get('new_name')
+    if old_name and new_name and new_name.endswith('.xlsx'):
+        old_path = os.path.join(DATASET_FOLDER, old_name)
+        new_path = os.path.join(DATASET_FOLDER, secure_filename(new_name))
+        if os.path.exists(old_path):
+            os.rename(old_path, new_path)
+            flash("Arquivo renomeado.", "success")
+        else:
+            flash("Arquivo não encontrado.", "danger")
+    else:
+        flash("Nome inválido.", "danger")
+    return redirect(url_for('datasets'))
 
 if __name__ == "__main__":
     app.run(debug=True)
