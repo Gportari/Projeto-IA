@@ -1,62 +1,93 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, regularizers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-class KerasLogisticRegression:
-    def __init__(self, learning_rate=0.01, epochs=100, batch_size=32, 
-                 l1_regularization=0.0, l2_regularization=0.0):
+class KerasSVC:
+    def __init__(self, C=1.0, kernel='rbf', gamma='scale', degree=3, learning_rate=0.01, epochs=100, batch_size=32):
         """
-        Initialize Keras-based Logistic Regression model
+        Initialize Keras-based SVC model using a neural network
         
         Parameters:
         -----------
+        C : float
+            Regularization parameter (inverse of regularization strength)
+        kernel : str
+            Kernel type to use ('linear', 'rbf', 'poly')
+        gamma : str or float
+            Kernel coefficient for 'rbf' and 'poly'
+        degree : int
+            Degree for 'poly' kernel
         learning_rate : float
             Learning rate for the optimizer
         epochs : int
             Number of training epochs
         batch_size : int
             Batch size for training
-        l1_regularization : float
-            L1 regularization strength (similar to 'l1' penalty in sklearn)
-        l2_regularization : float
-            L2 regularization strength (similar to 'l2' penalty in sklearn)
         """
+        self.C = C
+        self.kernel = kernel
+        self.gamma = gamma
+        self.degree = degree
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
-        self.l1_regularization = l1_regularization
-        self.l2_regularization = l2_regularization
         self.model = None
         self.history = None
+        self.feature_mean = None
+        self.feature_std = None
     
     def build_model(self, input_shape):
         """
-        Build the Keras model for logistic regression
+        Build the Keras model for SVC-like behavior
         
         Parameters:
         -----------
         input_shape : tuple
             Shape of the input features
         """
-        # Configure regularization
-        regularizer = None
-        if self.l1_regularization > 0 and self.l2_regularization > 0:
-            regularizer = keras.regularizers.L1L2(l1=self.l1_regularization, l2=self.l2_regularization)
-        elif self.l1_regularization > 0:
-            regularizer = keras.regularizers.L1(l1=self.l1_regularization)
-        elif self.l2_regularization > 0:
-            regularizer = keras.regularizers.L2(l2=self.l2_regularization)
+        # Determine regularization based on C parameter (inverse relationship)
+        reg_strength = 1.0 / (self.C + 1e-10)
         
-        # Build model
-        model = keras.Sequential([
-            layers.Input(shape=input_shape),
-            layers.Dense(1, activation='sigmoid', kernel_regularizer=regularizer)
-        ])
+        # Build model architecture based on kernel type
+        inputs = keras.Input(shape=input_shape)
         
-        # Compile model
+        if self.kernel == 'linear':
+            # Linear kernel - simpler architecture
+            x = layers.Dense(64, activation='relu', 
+                            kernel_regularizer=regularizers.l2(reg_strength))(inputs)
+            x = layers.Dense(32, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(x)
+        
+        elif self.kernel == 'rbf':
+            # RBF kernel - deeper architecture with more units
+            x = layers.Dense(128, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(inputs)
+            x = layers.Dense(64, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(x)
+            x = layers.Dense(32, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(x)
+        
+        elif self.kernel == 'poly':
+            # Polynomial kernel - use degree to determine architecture
+            units = 32 * self.degree
+            x = layers.Dense(units, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(inputs)
+            x = layers.Dense(units // 2, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(x)
+            x = layers.Dense(units // 4, activation='relu',
+                            kernel_regularizer=regularizers.l2(reg_strength))(x)
+        
+        else:
+            raise ValueError(f"Unsupported kernel type: {self.kernel}")
+        
+        # Output layer for binary classification
+        outputs = layers.Dense(1, activation='sigmoid')(x)
+        
+        # Create and compile model
+        model = keras.Model(inputs=inputs, outputs=outputs)
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate=self.learning_rate),
             loss='binary_crossentropy',
@@ -68,7 +99,7 @@ class KerasLogisticRegression:
     
     def fit(self, X, y, validation_split=0.2):
         """
-        Train the logistic regression model
+        Train the SVC-like model
         
         Parameters:
         -----------
@@ -84,19 +115,22 @@ class KerasLogisticRegression:
         self : object
             Returns self
         """
+        # Normalize features
+        X_normalized, self.feature_mean, self.feature_std = self._normalize_features(X)
+        
         # Convert labels to expected format for binary classification
         y_formatted = np.array(y)
-        # Convert -1 to 0 if present (common in some datasets)
+        # Convert -1 to 0 if present (common in SVM datasets)
         if np.any(y_formatted == -1):
             y_formatted = np.where(y_formatted == -1, 0, y_formatted)
         
         # Build model if not already built
         if self.model is None:
-            self.build_model(X.shape[1:])
+            self.build_model(X_normalized.shape[1:])
         
         # Train model
         self.history = self.model.fit(
-            X, y_formatted,
+            X_normalized, y_formatted,
             epochs=self.epochs,
             batch_size=self.batch_size,
             validation_split=validation_split,
@@ -104,6 +138,36 @@ class KerasLogisticRegression:
         )
         
         return self
+    
+    def _normalize_features(self, X, is_training=True):
+        """
+        Normalize features using mean and standard deviation
+        
+        Parameters:
+        -----------
+        X : array-like
+            Features to normalize
+        is_training : bool
+            Whether this is during training (to compute stats) or prediction
+        
+        Returns:
+        --------
+        X_normalized : array
+            Normalized features
+        """
+        X_array = np.array(X)
+        
+        if is_training:
+            # Compute mean and std during training
+            self.feature_mean = np.mean(X_array, axis=0)
+            self.feature_std = np.std(X_array, axis=0)
+            # Avoid division by zero
+            self.feature_std = np.where(self.feature_std == 0, 1e-7, self.feature_std)
+        
+        # Normalize using stored stats
+        X_normalized = (X_array - self.feature_mean) / self.feature_std
+        
+        return X_normalized, self.feature_mean, self.feature_std if is_training else None
     
     def predict(self, X):
         """
@@ -122,13 +186,16 @@ class KerasLogisticRegression:
         if self.model is None:
             raise ValueError("Model has not been trained yet.")
         
+        # Normalize features using stored stats
+        X_normalized, _, _ = self._normalize_features(X, is_training=False)
+        
         # Get probability predictions
-        y_prob = self.model.predict(X, verbose=0)
+        y_prob = self.model.predict(X_normalized, verbose=0)
         
         # Convert to binary predictions (0 or 1)
         y_pred = (y_prob > 0.5).astype(int)
         
-        # Convert 0 to -1 to match original format if needed
+        # Convert 0 to -1 to match original SVM format
         y_pred = np.where(y_pred == 0, -1, 1)
         
         return y_pred.flatten()
@@ -150,8 +217,11 @@ class KerasLogisticRegression:
         if self.model is None:
             raise ValueError("Model has not been trained yet.")
         
+        # Normalize features using stored stats
+        X_normalized, _, _ = self._normalize_features(X, is_training=False)
+        
         # Get probability predictions
-        y_prob = self.model.predict(X, verbose=0)
+        y_prob = self.model.predict(X_normalized, verbose=0)
         
         # Return probabilities for both classes [P(y=0), P(y=1)]
         return np.hstack([1-y_prob, y_prob])
@@ -172,14 +242,8 @@ class KerasLogisticRegression:
         metrics : dict
             Dictionary containing evaluation metrics
         """
-        # Convert labels if needed
-        y_formatted = np.array(y)
-        if np.any(y_formatted == -1):
-            y_formatted = np.where(y_formatted == -1, 0, y_formatted)
-        
         # Get predictions
         y_pred = self.predict(X)
-        y_pred_formatted = np.where(y_pred == -1, 0, y_pred)
         
         # Calculate metrics
         metrics = {
@@ -193,7 +257,7 @@ class KerasLogisticRegression:
 
 def create_model_from_config(config, training_params=None):
     """
-    Create a Keras Logistic Regression model from configuration
+    Create a Keras SVC model from configuration
     
     Parameters:
     -----------
@@ -204,7 +268,7 @@ def create_model_from_config(config, training_params=None):
     
     Returns:
     --------
-    model : KerasLogisticRegression
+    model : KerasSVC
         Configured model instance
     """
     # Set default training parameters
@@ -212,33 +276,28 @@ def create_model_from_config(config, training_params=None):
         training_params = {}
     
     # Extract parameters from config
+    C = float(config.get('svm_C', 1.0))
+    kernel = config.get('svm_kernel', 'rbf')
+    gamma = config.get('svm_gamma', 'scale')
+    degree = int(config.get('svm_degree', 3))
     learning_rate = float(training_params.get('learning_rate', 0.01))
     epochs = int(training_params.get('epochs', 100))
     batch_size = int(training_params.get('batch_size', 32))
     
-    # Map regularization parameters
-    penalty = config.get('logreg_penalty', 'l2')
-    C = float(config.get('logreg_C', 1.0))
-    
-    # Convert C to regularization strength (inverse relationship)
-    reg_strength = 1.0 / C if C > 0 else 0.0
-    
-    # Configure L1 and L2 regularization based on penalty
-    l1_reg = reg_strength if penalty == 'l1' else 0.0
-    l2_reg = reg_strength if penalty == 'l2' else 0.0
-    
     # Create and return model
-    return KerasLogisticRegression(
+    return KerasSVC(
+        C=C,
+        kernel=kernel,
+        gamma=gamma,
+        degree=degree,
         learning_rate=learning_rate,
         epochs=epochs,
-        batch_size=batch_size,
-        l1_regularization=l1_reg,
-        l2_regularization=l2_reg
+        batch_size=batch_size
     )
 
 def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_params=None):
     """
-    Train and evaluate a Keras Logistic Regression model
+    Train and evaluate a Keras SVC model
     
     Parameters:
     -----------
@@ -271,7 +330,7 @@ def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_
     
     # Add model name to results
     results = {
-        'name': model_config.get('name', 'Logistic Regression'),
+        'name': model_config.get('name', 'SVC'),
         **metrics
     }
     

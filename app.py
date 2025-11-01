@@ -2,6 +2,14 @@ from flask import Flask, render_template, request, redirect, jsonify
 from model_registry import ModelRegistry
 import os
 import json
+import numpy as np
+from sklearn.model_selection import train_test_split
+# Import Keras-based model implementations
+from trainingModels.LogisticRegression import train_and_evaluate as train_logistic
+from trainingModels.KNN import train_and_evaluate as train_knn
+from trainingModels.SVC import train_and_evaluate as train_svc
+from trainingModels.DecisionTree import train_and_evaluate as train_tree
+from trainingModels.RandomForest import train_and_evaluate as train_rf
 
 app = Flask(__name__)
 registry = ModelRegistry()
@@ -28,6 +36,12 @@ def models():
     # Carregar modelos dos arquivos JSON
     models_list = registry.listar_modelos()
     return render_template('Models.html', model_list=models_list)
+
+@app.route('/ModelComparison.html')
+def model_comparison():
+    # Carregar modelos dos arquivos JSON para a página de comparação
+    models_list = registry.listar_modelos()
+    return render_template('ModelComparison.html', model_list=models_list)
 
 @app.route('/api/models', methods=['GET'])
 def get_models_api():
@@ -97,6 +111,78 @@ def cadastrar_modelo():
             request.form.get('rf_oob_score')
         )
     return redirect('/Models.html')
+
+@app.route('/ModelComparison.html')
+def model_comparison():
+    return render_template('ModelComparison.html')
+
+@app.route('/api/train-compare', methods=['POST'])
+def train_compare():
+    data = request.json
+    
+    # Extract dataset
+    features = np.array(data['dataset']['features'])
+    labels = np.array(data['dataset']['labels'])
+    
+    # Split dataset
+    test_size = data['training_params']['test_split']
+    X_train, X_test, y_train, y_test = train_test_split(
+        features, labels, test_size=test_size, random_state=42
+    )
+    
+    # Train and evaluate models
+    results = {
+        'model1': train_and_evaluate_model(data['model1'], X_train, X_test, y_train, y_test, 
+                                          data['training_params']),
+        'model2': train_and_evaluate_model(data['model2'], X_train, X_test, y_train, y_test,
+                                          data['training_params'])
+    }
+    
+    return jsonify(results)
+
+def train_and_evaluate_model(model_info, X_train, X_test, y_train, y_test, training_params):
+    model_type = model_info['type']
+    config_file = model_info['config']
+    
+    # Load model configuration
+    model_config = load_model_config(model_type, config_file)
+    
+    # Use the appropriate training function based on model type
+    if model_type == 'logistic':
+        results, _ = train_logistic(model_config, X_train, X_test, y_train, y_test, training_params)
+    elif model_type == 'knn':
+        results, _ = train_knn(model_config, X_train, X_test, y_train, y_test, training_params)
+    elif model_type == 'svc':
+        results, _ = train_svc(model_config, X_train, X_test, y_train, y_test, training_params)
+    elif model_type == 'tree':
+        results, _ = train_tree(model_config, X_train, X_test, y_train, y_test, training_params)
+    elif model_type == 'rf':
+        results, _ = train_rf(model_config, X_train, X_test, y_train, y_test, training_params)
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
+    
+    # Add model name to results if not already present
+    if 'name' not in results:
+        results['name'] = config_file.replace('.json', '')
+    
+    return results
+
+def load_model_config(model_type, config_file):
+    model_type_map = {
+        'logistic': 'Regressão Logística',
+        'knn': 'KNN',
+        'svc': 'SVC',
+        'tree': 'Decision Tree',
+        'rf': 'Random Forest'
+    }
+    
+    model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models_json')
+    config_path = os.path.join(model_dir, config_file)
+    
+    with open(config_path, 'r') as f:
+        return json.load(f)
+    
+            
 
 if __name__ == "__main__":
     app.run(debug=True)

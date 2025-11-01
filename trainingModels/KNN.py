@@ -5,55 +5,47 @@ from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-class KerasLogisticRegression:
-    def __init__(self, learning_rate=0.01, epochs=100, batch_size=32, 
-                 l1_regularization=0.0, l2_regularization=0.0):
+class KerasKNN:
+    def __init__(self, n_neighbors=5, learning_rate=0.01, epochs=100, batch_size=32):
         """
-        Initialize Keras-based Logistic Regression model
+        Initialize Keras-based KNN-like model using a neural network
         
         Parameters:
         -----------
+        n_neighbors : int
+            Number of neighbors (used to determine network complexity)
         learning_rate : float
             Learning rate for the optimizer
         epochs : int
             Number of training epochs
         batch_size : int
             Batch size for training
-        l1_regularization : float
-            L1 regularization strength (similar to 'l1' penalty in sklearn)
-        l2_regularization : float
-            L2 regularization strength (similar to 'l2' penalty in sklearn)
         """
+        self.n_neighbors = n_neighbors
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
-        self.l1_regularization = l1_regularization
-        self.l2_regularization = l2_regularization
         self.model = None
         self.history = None
     
     def build_model(self, input_shape):
         """
-        Build the Keras model for logistic regression
+        Build the Keras model for KNN-like behavior
         
         Parameters:
         -----------
         input_shape : tuple
             Shape of the input features
         """
-        # Configure regularization
-        regularizer = None
-        if self.l1_regularization > 0 and self.l2_regularization > 0:
-            regularizer = keras.regularizers.L1L2(l1=self.l1_regularization, l2=self.l2_regularization)
-        elif self.l1_regularization > 0:
-            regularizer = keras.regularizers.L1(l1=self.l1_regularization)
-        elif self.l2_regularization > 0:
-            regularizer = keras.regularizers.L2(l2=self.l2_regularization)
+        # Determine network complexity based on n_neighbors
+        units = max(16, self.n_neighbors * 4)
         
-        # Build model
+        # Build model with multiple layers to approximate KNN behavior
         model = keras.Sequential([
             layers.Input(shape=input_shape),
-            layers.Dense(1, activation='sigmoid', kernel_regularizer=regularizer)
+            layers.Dense(units, activation='relu'),
+            layers.Dense(units // 2, activation='relu'),
+            layers.Dense(1, activation='sigmoid')
         ])
         
         # Compile model
@@ -68,7 +60,7 @@ class KerasLogisticRegression:
     
     def fit(self, X, y, validation_split=0.2):
         """
-        Train the logistic regression model
+        Train the KNN-like model
         
         Parameters:
         -----------
@@ -172,14 +164,8 @@ class KerasLogisticRegression:
         metrics : dict
             Dictionary containing evaluation metrics
         """
-        # Convert labels if needed
-        y_formatted = np.array(y)
-        if np.any(y_formatted == -1):
-            y_formatted = np.where(y_formatted == -1, 0, y_formatted)
-        
         # Get predictions
         y_pred = self.predict(X)
-        y_pred_formatted = np.where(y_pred == -1, 0, y_pred)
         
         # Calculate metrics
         metrics = {
@@ -193,7 +179,7 @@ class KerasLogisticRegression:
 
 def create_model_from_config(config, training_params=None):
     """
-    Create a Keras Logistic Regression model from configuration
+    Create a Keras KNN model from configuration
     
     Parameters:
     -----------
@@ -204,7 +190,7 @@ def create_model_from_config(config, training_params=None):
     
     Returns:
     --------
-    model : KerasLogisticRegression
+    model : KerasKNN
         Configured model instance
     """
     # Set default training parameters
@@ -212,33 +198,22 @@ def create_model_from_config(config, training_params=None):
         training_params = {}
     
     # Extract parameters from config
+    n_neighbors = int(config.get('knn_n_neighbors', 5))
     learning_rate = float(training_params.get('learning_rate', 0.01))
     epochs = int(training_params.get('epochs', 100))
     batch_size = int(training_params.get('batch_size', 32))
     
-    # Map regularization parameters
-    penalty = config.get('logreg_penalty', 'l2')
-    C = float(config.get('logreg_C', 1.0))
-    
-    # Convert C to regularization strength (inverse relationship)
-    reg_strength = 1.0 / C if C > 0 else 0.0
-    
-    # Configure L1 and L2 regularization based on penalty
-    l1_reg = reg_strength if penalty == 'l1' else 0.0
-    l2_reg = reg_strength if penalty == 'l2' else 0.0
-    
     # Create and return model
-    return KerasLogisticRegression(
+    return KerasKNN(
+        n_neighbors=n_neighbors,
         learning_rate=learning_rate,
         epochs=epochs,
-        batch_size=batch_size,
-        l1_regularization=l1_reg,
-        l2_regularization=l2_reg
+        batch_size=batch_size
     )
 
 def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_params=None):
     """
-    Train and evaluate a Keras Logistic Regression model
+    Train and evaluate a Keras KNN model
     
     Parameters:
     -----------
@@ -271,7 +246,7 @@ def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_
     
     # Add model name to results
     results = {
-        'name': model_config.get('name', 'Logistic Regression'),
+        'name': model_config.get('name', 'KNN'),
         **metrics
     }
     
