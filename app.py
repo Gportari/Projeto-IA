@@ -112,9 +112,7 @@ def cadastrar_modelo():
         )
     return redirect('/Models.html')
 
-@app.route('/ModelComparison.html')
-def model_comparison():
-    return render_template('ModelComparison.html')
+
 
 @app.route('/api/train-compare', methods=['POST'])
 def train_compare():
