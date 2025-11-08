@@ -81,7 +81,7 @@ class KerasRandomForest:
         
         return model
     
-    def fit(self, X, y, validation_split=0.2):
+    def fit(self, X, y, validation_split=0.2, callbacks=None):
         """
         Train the Random Forest-like model
         
@@ -147,7 +147,7 @@ class KerasRandomForest:
                 epochs=self.epochs,
                 batch_size=self.batch_size,
                 validation_split=validation_split,
-                callbacks=[early_stopping],
+                callbacks=[early_stopping] + (callbacks or []),
                 verbose=0
             )
             
