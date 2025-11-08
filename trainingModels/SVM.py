@@ -5,10 +5,10 @@ from tensorflow.keras import layers, regularizers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-class KerasSVC:
+class KerasSVM:
     def __init__(self, C=1.0, kernel='rbf', gamma='scale', degree=3, learning_rate=0.01, epochs=100, batch_size=32):
         """
-        Initialize Keras-based SVC model using a neural network
+        Initialize Keras-based SVM model using a neural network
         
         Parameters:
         -----------
@@ -41,7 +41,7 @@ class KerasSVC:
     
     def build_model(self, input_shape):
         """
-        Build the Keras model for SVC-like behavior
+        Build the Keras model for SVM-like behavior
         
         Parameters:
         -----------
@@ -99,7 +99,7 @@ class KerasSVC:
     
     def fit(self, X, y, validation_split=0.2, callbacks=None):
         """
-        Train the SVC-like model
+        Train the SVM-like model
         
         Parameters:
         -----------
@@ -292,7 +292,7 @@ class KerasSVC:
 
 def create_model_from_config(config, training_params=None):
     """
-    Create a Keras SVC model from configuration
+    Create a Keras SVM model from configuration
     
     Parameters:
     -----------
@@ -303,7 +303,7 @@ def create_model_from_config(config, training_params=None):
     
     Returns:
     --------
-    model : KerasSVC
+    model : KerasSVM
         Configured model instance
     """
     # Set default training parameters
@@ -320,7 +320,7 @@ def create_model_from_config(config, training_params=None):
     batch_size = int(training_params.get('batch_size', 32))
     
     # Create and return model
-    return KerasSVC(
+    return KerasSVM(
         C=C,
         kernel=kernel,
         gamma=gamma,
@@ -332,7 +332,7 @@ def create_model_from_config(config, training_params=None):
 
 def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_params=None):
     """
-    Train and evaluate a Keras SVC model
+    Train and evaluate a Keras SVM model
     
     Parameters:
     -----------
@@ -365,7 +365,7 @@ def train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_
     
     # Add model name to results
     results = {
-        'name': model_config.get('name', 'SVC'),
+        'name': model_config.get('name', 'SVM'),
         **metrics
     }
     

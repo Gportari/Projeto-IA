@@ -88,7 +88,7 @@ tailwind.config = {
             <select id="model-type-filter" class="form-select w-full resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] focus:border-primary/50 dark:focus:border-primary h-12 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[10px] text-base font-normal leading-normal">
                 <option value="logistic">Regressão Logística</option>
                 <option value="knn">KNN</option>
-                <option value="svc">SVC</option>
+                <option value="svm">SVM</option>
                 <option value="tree">DecisionTreeClassifier</option>
                 <option value="rf">RandomForestClassifier</option>
             </select>
@@ -189,10 +189,10 @@ tailwind.config = {
         </div>
     </form>
 
-    <!-- Formulário SVC -->
-    <form id="form-svc" method="POST" action="/cadastrar_modelo" style="display:none;">
+    <!-- Formulário SVM -->
+    <form id="form-svm" method="POST" action="/cadastrar_modelo" style="display:none;">
         <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
-            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">SVC (Support Vector Machine)</h2>
+            <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">SVM (Support Vector Machine)</h2>
             <div class="flex flex-col gap-6">
                 <label class="flex flex-col">
                     <span>ID_Teste</span>
@@ -200,7 +200,7 @@ tailwind.config = {
                 </label>
                 <label class="flex flex-col">
                     <span>Modelo_ML_Utilizado</span>
-                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="SVC" readonly/>
+                    <input name="modelo_ml_utilizado" class="form-input w-full rounded-lg ..." type="text" value="SVM" readonly/>
                 </label>
                 <label class="flex flex-col">
                     <span>Estrategia_Preprocessamento</span>

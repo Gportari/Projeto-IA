@@ -1,6 +1,6 @@
 import numpy as np
 from trainingModels.LogisticRegression import train_and_evaluate as train_logistic
-from trainingModels.SVC import train_and_evaluate as train_svc
+from trainingModels.SVM import train_and_evaluate as train_svm
 
 
 def _make_synthetic(n=200, seed=0):
@@ -27,11 +27,11 @@ def test_logistic_synthetic():
     assert isinstance(results.get('confusion_matrix'), list)
 
 
-def test_svc_synthetic():
+def test_svm_synthetic():
     X_train, X_test, y_train, y_test = _make_synthetic(seed=1)
-    config = {'name': 'SVC Test', 'svm_kernel': 'rbf', 'svm_C': 1.0, 'svm_gamma': 'scale', 'svm_probability': True}
+    config = {'name': 'SVM Test', 'svm_kernel': 'rbf', 'svm_C': 1.0, 'svm_gamma': 'scale', 'svm_probability': True}
     training_params = {}
-    results, _ = train_svc(config, X_train, X_test, y_train, y_test, training_params)
+    results, _ = train_svm(config, X_train, X_test, y_train, y_test, training_params)
     assert 'accuracy' in results and results['accuracy'] >= 0.7
     assert 'precision' in results and 'recall' in results and 'f1_score' in results
     assert isinstance(results.get('confusion_matrix'), list)
