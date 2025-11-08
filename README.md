@@ -1,88 +1,139 @@
-# Projeto IA — UI e Design System
+# ML Workspace — Model Training & Comparison
 
-Este projeto foi atualizado para remover o Dashboard, padronizar o visual com um design system centralizado e introduzir uma barra lateral de navegação reutilizável baseada em Vue.
+A Flask-based web app to register machine learning models via JSON configs, train and compare them with live progress, and test predictions. The UI uses a small design system and a reusable Vue sidebar component.
 
-## Mudanças Principais
+## Highlights
+- Model registry from `models_json/*.json` rendered in `Models.html`.
+- Training and comparison in `ModelComparison.html` with server-side polling.
+- Aggregated training progress for Random Forest across all estimators.
+- Centralized theme tokens and sticky sidebar (`static/theme.css`).
 
-- Remoção completa do `Dashboard.html` e rotas associadas no backend.
-- Criação de um componente reutilizável para a barra lateral em `static/components/sidebar-nav.js`.
-- Padronização visual com um design system unificado em `static/theme.css`.
-- Implementação de um sistema de temas centralizado usando variáveis CSS e atributo `data-theme` em `<html>`.
-- Atualização da página `Models.html` para exibir todos os modelos cadastrados em `models_json`.
+## Quick Start
+- Prerequisites: Python 3.11+ (tested with 3.13) and `pip`.
+- Install dependencies: `pip install -r requirements.txt`
+- Run the server: `python app.py`
+- Open: `http://127.0.0.1:5000/`
 
-## Arquitetura de Componentes
-
-- `static/components/sidebar-nav.js`: Componente Vue que renderiza a barra lateral com:
-  - Links para `Models` e `Model Comparison`.
-  - Informações de usuário fictícias.
-  - Botão para alternar o tema claro/escuro.
-- Uso: Inclua Vue via CDN e o script do componente, adicione `<div id="sidebar"></div>` na página e chame `initSidebarNav()`.
-
-Exemplo de integração:
-
-```html
-<link rel="stylesheet" href="/static/theme.css">
-<script src="https://unpkg.com/vue@3"></script>
-<script src="/static/components/sidebar-nav.js"></script>
-...
-<div id="sidebar"></div>
-<script>initSidebarNav();</script>
+## Project Structure
+```
+app.py                      # Flask app and API routes
+model_registry.py           # Reads and groups model configs
+models_json/                # JSON configs per model
+static/
+  components/sidebar-nav.js # Vue-based sidebar
+  model_comparison.js       # Frontend training/test logic
+  models.js                 # Field lists and UI helpers
+  theme.css                 # Design system and theme tokens
+templates/
+  Models.html               # Model registry page
+  ModelComparison.html      # Training & comparison page
+trainingModels/             # Model implementations
+  LogisticRegression.py
+  KNN.py
+  SVM.py
+  DecisionTree.py
+  RandomForest.py           # Keras-based ensemble
+tests/diagnostic_tests.py   # Simple diagnostics
+requirements.txt            # Python dependencies
 ```
 
-## Design System
+## Pages
+**Models**
+- Lists all registered models from `/api/models`.
+- Shows model type and its parameters parsed from JSON.
 
-- `static/theme.css` define tokens e variáveis para:
-  - Paleta de cores (`--color-bg`, `--color-text`, `--color-primary`, etc.)
-  - Tipografia (`--font-family-sans`, `--font-size-*`, `--line-height-*`)
-  - Espaçamentos (`--space-*`)
-  - Componentes (sidebar, `btn`, `card`, `input`, `table`)
-  - Efeitos visuais (`--shadow-*`, transições)
-- Páginas passam a usar classes semânticas (`sidebar`, `btn`, `card`, etc.) e variáveis CSS, garantindo consistência.
+**Model Comparison**
+- Choose a model + dataset + training params.
+- Starts training and polls `/api/train/status/<job_id>` every second.
+- Displays epoch, total_epochs, metrics (when complete), and ETA.
 
-## Sistema de Tema
+## Model Configs
+- Location: `models_json/*.json`.
+- Typical fields (Random Forest example):
+```
+{
+  "nome_teste": "Teste Random Forest 1",
+  "nome_modelo": "RandomForestClassifier",
+  "rf_n_estimators": 10,
+  "rf_max_depth": "None",
+  "rf_learning_rate": 0.01,
+  "rf_epochs": 50,
+  "rf_batch_size": 32
+}
+```
+- Notes:
+  - `rf_max_depth` accepts numeric or the string `"None"`.
+  - If a numeric field is given as `"None"`, `"null"`, or empty, the backend applies safe defaults.
 
-- O tema é controlado pelo atributo `data-theme` no elemento `<html>`:
-  - `data-theme="light"` (padrão)
-  - `data-theme="dark"`
-- O botão “Toggle Theme” da barra lateral alterna entre `light` e `dark` atualizando `document.documentElement`.
-- Para forçar um tema em uma página, defina no HTML: `<html data-theme="dark">`.
+## Training Parameters
+- Passed from the UI and consumed by the backend:
+  - `epochs`: total epochs per estimator (`int`).
+  - `batch_size`: batch size (`int`).
+  - `validation_split`: fraction for validation (`float`, default `0.2`).
+  - `test_split`: train/test split (`float`, default `0.2`).
 
-## Páginas Atualizadas
+## API
+- `GET /api/models`
+  - Returns grouped models (type, filename, params) for the UI.
 
-- `templates/Models.html`
-  - Integra o componente de barra lateral.
-  - Inclui `theme.css`.
-  - A tabela de modelos agora lista TODOS os modelos vindos de `/api/models` (que lê `models_json`).
-  - Colunas: `Model Name` (usa `nome_teste`), `Type` (`nome_modelo`), `Parameters` (lista dos parâmetros relevantes ao tipo).
-
-- `templates/ModelComparison.html`
-  - Integra o componente de barra lateral.
-  - Inclui `theme.css`.
-  - Mantém as funcionalidades de treinamento, teste e comparação com polling via `/api/train/*`.
-
-## Backend
-
-- `app.py`
-  - A rota `/` e `/Models.html` renderizam `Models.html`.
-  - Rota `/ModelComparison.html` permanece.
-  - Rotas de API (`/api/models`, `/api/train/*`, `/api/test/*`) continuam inalteradas.
-
-## Diretrizes de Estilo
-
-- Utilize variáveis de `static/theme.css` para cores, tipografia e espaçamentos.
-- Prefira classes utilitárias do design system (`btn`, `card`, `table`, `sidebar`) quando aplicável.
-- Evite estilos inline; concentre a personalização nas variáveis do tema.
-
-## Padrões de Implementação Visual
-
-- Estruture páginas com layout flex: uma sidebar fixa (`.sidebar`) e um `<main>` rolável.
-- Garanta contraste adequado para ambos os temas; teste elementos em `light` e `dark`.
-- Para novos componentes, consuma variáveis do tema e siga o padrão de nomenclatura simples (`.component-name`).
-
-## Como Rodar
-
-```bash
-python app.py
+- `POST /api/train/start`
+  - Starts a job. Returns `{ job_id }`.
+  - Payload example:
+```
+{
+  "model": { "type": "rf", "config": "RandomForest_example_1.json" },
+  "dataset": { "features": [[...], [...]], "labels": [1, -1] },
+  "training_params": { "epochs": 50, "batch_size": 32, "validation_split": 0.2, "test_split": 0.2 }
+}
 ```
 
-Abra a página inicial em `/` (Models). A barra lateral e o tema centralizado estarão ativos.
+- `GET /api/train/status/<job_id>`
+  - Live job status: `epoch`, `total_epochs`, `loss`, `accuracy`, `eta_seconds`, `status`.
+
+- `POST /api/train/cancel/<job_id>`
+  - Requests cancellation.
+
+- `GET /api/train/result/<job_id>`
+  - Final metrics and summary when `status=completed`.
+
+- `POST /api/test/<job_id>`
+  - Run predictions on a trained model.
+  - Payload: `{ features: [...], labels?: [...] }`.
+  - Returns `predictions` and optional metrics (accuracy, precision, recall, f1, confusion matrix).
+
+## Implementation Notes
+- Random Forest progress:
+  - Training uses one `keras.Model.fit()` per estimator.
+  - Backend aggregates progress so epochs don’t appear to “reset” between estimators.
+  - `total_epochs` is reported as `epochs * rf_n_estimators`.
+
+- Parameter parsing robustness:
+  - Numeric fields gracefully handle `"None"`, `"null"`, or empty strings.
+
+- UI/Design system:
+  - Sticky sidebar and theme toggle via `static/theme.css` and `static/components/sidebar-nav.js`.
+
+## Development
+- Add a new model in `trainingModels/` with:
+  - `create_model_from_config(config, training_params)` returning a model instance.
+  - `train_and_evaluate(model_config, X_train, X_test, y_train, y_test, training_params)` returning `(results, model)`.
+- Update `model_registry.py` and `static/models.js` if new parameters are introduced.
+- Keep changes consistent, minimal, and focused.
+
+## Testing
+- Run diagnostics: `python tests/diagnostic_tests.py`
+- Validate training and progress in `Model Comparison` after starting the server.
+
+## Troubleshooting
+- Random Forest: `invalid literal for int() with base 10: 'None'`
+  - Fixed by robust parsing in `trainingModels/RandomForest.py`.
+  - Ensure JSON uses `"None"` for optional numeric fields or provide a number.
+- Epochs “resetting” on Random Forest
+  - Resolved by aggregated progress in `app.py`.
+  - `total_epochs` equals `epochs * n_estimators`; progress is continuous.
+- If UI doesn’t load
+  - Check the server output and confirm `http://127.0.0.1:5000/` is reachable.
+  - Verify dependencies via `pip install -r requirements.txt`.
+
+## Notes
+- This project prioritizes clarity and simple defaults; avoid overcomplicating configs.
