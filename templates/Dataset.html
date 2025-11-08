@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Dataset</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+  tailwind.config = {
+      darkMode: "class",
+      theme: {
+          extend: {
+              colors: {
+                  primary: "#000000",
+                  "background-light": "#f7f7f7",
+                  "background-dark": "#191919"
+              },
+              fontFamily: {display: "Space Grotesk"},
+              borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}
+          }
+      }
+  };
+  </script>
+  <link rel="stylesheet" href="/static/style-models.css">
+  <link rel="stylesheet" href="/static/theme.css">
+  <style>
+    /* Ajustes leves para tabela do dataset, mantendo tokens do theme.css */
+    .table th, .table td { padding: 0.75rem 1rem; }
+  </style>
+ </head>
+<body class="font-display">
+  <div class="flex h-screen">
+    <div id="sidebar"></div>
+    <main class="flex-1 overflow-y-auto">
+      <div class="max-w-7xl mx-auto p-8 flex flex-col h-full">
+        <div class="flex-shrink-0">
+          <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-col gap-2">
+              <p class="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Dataset</p>
+              <p class="text-gray-600 dark:text-[#92adc9] text-base font-normal leading-normal">Visualize e gerencie os dados usados no treinamento.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Novo layout com cards no topo e tabela em largura total -->
+        <div class="flex-grow grid grid-cols-12 gap-8">
+          <!-- Card: Novo Dataset -->
+          <div class="col-span-5 flex flex-col">
+            <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+              <div class="flex items-center justify-between pb-2">
+                <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Novo Dataset</h2>
+              </div>
+              <p class="text-gray-600 dark:text-[#92adc9] text-sm mb-6">Informe o <strong>nome do dataset</strong> e selecione o <strong>arquivo XLSX</strong>. Tamanho, linhas e datas serão definidos automaticamente.</p>
+              <div class="flex flex-col gap-5">
+                <label class="flex flex-col">
+                  <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Nome do dataset</span>
+                  <input id="dataset-name" type="text" required placeholder="Ex.: Vendas_2024_Q3" class="form-input w-full rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] h-12 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[10px] text-base"/>
+                </label>
+                <label class="flex flex-col">
+                  <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Arquivo XLSX</span>
+                  <input id="dataset-file" type="file" accept=".xlsx" required class="form-input w-full rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633] h-12 placeholder:text-gray-500 dark:placeholder:text-[#92adc9] p-[10px] text-base"/>
+                  <span class="text-xs text-gray-500 dark:text-[#92adc9] pt-2">Apenas arquivos com extensão .xlsx</span>
+                </label>
+                <div class="flex justify-end gap-4">
+                  <button id="upload-btn" type="button" disabled class="px-6 py-3 rounded-lg bg-black text-white dark:bg-white dark:text-black hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">Importar XLSX</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Resumo dos datasets -->
+          <div class="col-span-7 flex flex-col">
+            <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+              <div class="flex items-center justify-between">
+                <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Resumo dos datasets</h2>
+              </div>
+              <div class="grid grid-cols-4 gap-6 mt-6">
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-600 dark:text-[#92adc9]">Total de arquivos</span>
+                  <span id="stat-count" class="text-2xl font-semibold text-gray-900 dark:text-white">0</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-600 dark:text-[#92adc9]">Linhas totais</span>
+                  <span id="stat-rows" class="text-2xl font-semibold text-gray-900 dark:text-white">0</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-600 dark:text-[#92adc9]">Tamanho total</span>
+                  <span id="stat-size" class="text-2xl font-semibold text-gray-900 dark:text-white">0 B</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-gray-600 dark:text-[#92adc9]">Última atualização</span>
+                  <span id="stat-updated" class="text-sm font-medium text-gray-900 dark:text-white">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela em largura total -->
+          <div class="col-span-12 flex flex-col">
+            <div class="flex-1 bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] flex flex-col card">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Datasets enviados</h2>
+                <span class="text-xs text-gray-500 dark:text-[#92adc9]">Use “Importar XLSX” para adicionar um novo dataset</span>
+              </div>
+              <div class="overflow-x-auto flex-grow">
+                <table id="dataset-table" class="table w-full text-left text-sm text-gray-600 dark:text-[#92adc9]">
+                  <thead class="text-xs text-white dark:text-white uppercase bg-gray-900 dark:bg-[#192633]">
+                    <tr>
+                      <th class="px-6 py-3 text-white dark:text-white">Nome</th>
+                      <th class="px-6 py-3 text-white dark:text-white">Tamanho</th>
+                      <th class="px-6 py-3 text-white dark:text-white">Linhas</th>
+                      <th class="px-6 py-3 text-white dark:text-white">Data de Inserção</th>
+                      <th class="px-6 py-3 text-white dark:text-white">Data de Update</th>
+                      <th class="px-6 py-3 text-white dark:text-white">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dataset-table-body">
+                    <!-- Conteúdo será preenchido via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="/static/components/sidebar-nav.js"></script>
+  <script>initSidebarNav();</script>
+  <script src="/static/dataset.js"></script>
+</body>
+</html>

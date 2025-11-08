@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Editor de Dataset</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+  tailwind.config = {
+      darkMode: "class",
+      theme: {
+          extend: {
+              colors: {
+                  primary: "#000000",
+                  "background-light": "#f7f7f7",
+                  "background-dark": "#191919"
+              },
+              fontFamily: {display: "Space Grotesk"},
+              borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}
+          }
+      }
+  };
+  </script>
+  <link rel="stylesheet" href="/static/style-models.css">
+  <link rel="stylesheet" href="/static/theme.css">
+</head>
+<body class="font-display">
+  <div class="flex h-screen">
+    <div id="sidebar"></div>
+    <main class="flex-1 overflow-y-auto">
+      <div class="max-w-4xl mx-auto p-8 flex flex-col h-full">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <p class="text-gray-900 dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Editor de Dataset</p>
+            <p class="text-gray-600 dark:text-[#92adc9]">Renomeie o arquivo e veja os metadados.</p>
+          </div>
+          <a href="/Dataset.html" class="inline-flex items-center gap-2 text-blue-600 hover:underline">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Voltar
+          </a>
+        </div>
+
+        {% if error %}
+          <div class="bg-red-50 dark:bg-[#2a1f1f] border border-red-200 dark:border-red-600 text-red-700 dark:text-red-400 rounded-lg p-4">
+            {{ error }}
+          </div>
+        {% else %}
+          <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67] mb-6">
+            <h2 class="text-gray-900 dark:text-white text-[20px] font-bold leading-tight mb-4">Metadados</h2>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div><span class="text-gray-600 dark:text-[#92adc9]">Arquivo</span><p class="text-gray-900 dark:text-white font-medium">{{ filename }}</p></div>
+              <div><span class="text-gray-600 dark:text-[#92adc9]">Linhas</span><p class="text-gray-900 dark:text-white font-medium">{{ rows if rows is not none else '--' }}</p></div>
+              <div><span class="text-gray-600 dark:text-[#92adc9]">Tamanho</span><p class="text-gray-900 dark:text-white font-medium">{{ size_h if size_h else '--' }}</p></div>
+              <div class="flex items-center gap-3">
+                <a href="/api/datasets/download/{{ filename }}" class="inline-flex items-center justify-center p-2 rounded text-blue-600 hover:bg-gray-100 dark:hover:bg-[#1f2d3a]" title="Baixar">
+                  <span class="material-symbols-outlined">download</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-[#111a22] rounded-xl p-6 border border-gray-200 dark:border-[#324d67]">
+            <h2 class="text-gray-900 dark:text-white text-[20px] font-bold leading-tight mb-4">Renomear arquivo</h2>
+            <form id="rename-form" class="flex items-end gap-4">
+              <label class="flex-1">
+                <span class="text-gray-800 dark:text-white text-base font-medium leading-normal pb-2">Novo nome</span>
+                <input id="new-name" class="form-input w-full rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-300 dark:border-[#324d67] bg-gray-50 dark:bg-[#192633]" type="text" placeholder="Digite o novo nome" />
+              </label>
+              <button id="rename-btn" type="submit" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+                <span class="material-symbols-outlined mr-2">edit</span>
+                Renomear
+              </button>
+            </form>
+            <p class="text-xs text-gray-500 dark:text-[#92adc9] mt-2">Se você não informar a extensão, manteremos a atual automaticamente.</p>
+          </div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/components/sidebar-nav.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Monta sidebar
+      if (window.SidebarNav) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) new window.SidebarNav().mount(sidebar);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const filename = params.get('file');
+      const form = document.getElementById('rename-form');
+      const input = document.getElementById('new-name');
+      const btn = document.getElementById('rename-btn');
+      if (input && filename) {
+        try {
+          const base = filename.replace(/\.(csv|xlsx)$/i, '');
+          input.value = base;
+        } catch {}
+      }
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const newName = (input && input.value ? input.value.trim() : '');
+          if (!newName || !filename) {
+            alert('Informe o novo nome.');
+            return;
+          }
+          btn.disabled = true;
+          try {
+            const res = await fetch('/api/datasets/rename', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ old_name: filename, new_name: newName })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || 'Falha ao renomear');
+            alert('Renomeado com sucesso.');
+            window.location.href = '/Dataset.html';
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

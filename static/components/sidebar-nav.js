@@ -8,7 +8,8 @@ window.initSidebarNav = function initSidebarNav(options = {}) {
       return {
         links: [
           { label: 'Models', icon: 'neurology', href: '/Models.html' },
-          { label: 'Model Comparison', icon: 'compare', href: '/ModelComparison.html' }
+          { label: 'Model Comparison', icon: 'compare', href: '/ModelComparison.html' },
+          { label: 'Dataset', icon: 'table_view', href: '/Dataset.html' }
         ],
         user: { name: 'ML Workspace', email: 'user@example.com' }
       };
