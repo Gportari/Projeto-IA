@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/models')
             .then(response => response.json())
             .then(data => {
-                // Atualizar a variável global com os dados do servidor
-                window.saved_models = data;
+                // Converter objeto agrupado por tipo em lista plana
+                window.saved_models = Object.values(data || {}).flat();
                 // Atualizar a tabela com os modelos carregados
-                updateModelsTable(filter.value);
+                updateModelsTable();
             })
             .catch(error => console.error('Erro ao carregar modelos:', error));
     }
@@ -128,99 +128,80 @@ window.saved_models = []; // Array para armazenar os modelos carregados do servi
  * Atualiza a tabela de modelos com base no tipo de modelo selecionado
  * @param {string} modelType - O tipo de modelo selecionado ('logistic', 'knn', etc.)
  */
-function updateModelsTable(modelType) {
-    const modelDefinition = window.model_list[modelType];
+function updateModelsTable() {
     const savedModels = window.saved_models || [];
-    
-    if (!modelDefinition) return;
-
     const tableHead = document.getElementById('models-table-head');
     const tableBody = document.getElementById('model-table-body');
-    
-    // Limpar tabela
-    tableHead.innerHTML = '';
-    tableBody.innerHTML = '';
 
-    // Mapear tipos de modelo para nomes de exibição
-    const modelTypeMap = {
-        'logistic': 'Regressão Logística',
-        'knn': 'KNN',
-        'svm': 'SVM',
-        'tree': 'DecisionTreeClassifier',
-        'rf': 'RandomForestClassifier'
-    };
-    
-    // Filtrar modelos pelo tipo selecionado
-    const filteredModels = savedModels.filter(model => {
-        return model.nome_modelo === modelTypeMap[modelType];
-    });
-    
-    // Definir colunas para este tipo de modelo
-    const columns = [
-        'nome_teste',
-        'estrategia_preprocessamento',
-        'estrategia_validacao',
-        ...modelDefinition.params
-    ];
-    
-    // Criar cabeçalho da tabela
+    // Cabeçalho fixo conforme Models.html
+    tableHead.innerHTML = '';
     const headerRow = document.createElement('tr');
-    
-    columns.forEach(column => {
+    ['Model Name', 'Type', 'Parameters'].forEach(h => {
         const th = document.createElement('th');
         th.classList.add('px-6', 'py-3');
         th.setAttribute('scope', 'col');
-        
-        // Formatar nome da coluna para exibição
-        let displayName = column;
-        if (column.includes('_')) {
-            // Para parâmetros de modelo, remover o prefixo (ex: logreg_C -> C)
-            if (modelDefinition.params.includes(column)) {
-                displayName = column.split('_').slice(1).join('_');
-            } else {
-                // Para outras colunas, substituir underscore por espaço
-                displayName = column.replace(/_/g, ' ');
-            }
-        }
-        
-        th.textContent = displayName.toUpperCase();
+        th.textContent = h;
         headerRow.appendChild(th);
     });
-    
     tableHead.appendChild(headerRow);
-    
-    // Preencher corpo da tabela
-    if (filteredModels.length > 0) {
-        filteredModels.forEach(model => {
-            const row = document.createElement('tr');
-            row.classList.add('bg-white', 'border-b', 'dark:bg-[#1f2d3a]', 'dark:border-[#2a3746]');
-            
-            columns.forEach(column => {
-                const td = document.createElement('td');
-                td.classList.add('px-6', 'py-4', 'whitespace-nowrap');
-                
-                // Obter valor da coluna do modelo
-                const value = model[column] !== undefined ? model[column] : '—';
-                
-                td.textContent = value;
-                row.appendChild(td);
-            });
-            
-            tableBody.appendChild(row);
-        });
-    } else {
-        // Mensagem quando não há modelos
+
+    tableBody.innerHTML = '';
+
+    // Mapa reverso para descobrir o conjunto de parâmetros pelo tipo do modelo
+    const displayToKey = {
+        'Regressão Logística': 'logistic',
+        'KNN': 'knn',
+        'SVM': 'svm',
+        'Decision Tree': 'tree',
+        'Random Forest': 'rf'
+    };
+
+    if (savedModels.length === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.classList.add('bg-white', 'dark:bg-[#1f2d3a]');
-        
         const emptyCell = document.createElement('td');
         emptyCell.classList.add('px-6', 'py-4', 'text-center', 'text-gray-500', 'dark:text-[#92adc9]');
-        emptyCell.setAttribute('colspan', columns.length);
-        emptyCell.textContent = `Nenhum modelo ${modelTypeMap[modelType]} encontrado.`;
-        
+        emptyCell.setAttribute('colspan', '3');
+        emptyCell.textContent = 'Nenhum modelo encontrado.';
         emptyRow.appendChild(emptyCell);
         tableBody.appendChild(emptyRow);
+        return;
     }
+
+    savedModels.forEach(model => {
+        const row = document.createElement('tr');
+        row.classList.add('bg-white', 'border-b', 'dark:bg-[#1f2d3a]', 'dark:border-[#2a3746]');
+
+        // Nome e Tipo
+        const nameCell = document.createElement('td');
+        nameCell.classList.add('px-6', 'py-4', 'whitespace-nowrap');
+        nameCell.textContent = model.nome_teste || model.filename || '-';
+
+        const typeCell = document.createElement('td');
+        typeCell.classList.add('px-6', 'py-4', 'whitespace-nowrap');
+        typeCell.textContent = model.nome_modelo || '-';
+
+        // Parâmetros
+        const paramsCell = document.createElement('td');
+        paramsCell.classList.add('px-6', 'py-4');
+
+        const key = displayToKey[model.nome_modelo];
+        const paramsObj = model.params || {};
+        const paramKeys = (key && window.model_list[key]) ? window.model_list[key].params : Object.keys(paramsObj);
+
+        const pairs = paramKeys
+            .filter(k => paramsObj[k] !== undefined)
+            .map(k => {
+                const pretty = k.includes('_') ? k.split('_').slice(1).join('_') : k;
+                return `${pretty}=${paramsObj[k]}`;
+            });
+
+        paramsCell.textContent = pairs.join(', ');
+
+        row.appendChild(nameCell);
+        row.appendChild(typeCell);
+        row.appendChild(paramsCell);
+        tableBody.appendChild(row);
+    });
 }
 
 
@@ -276,10 +257,10 @@ function fetchModels() {
             return response.json();
         })
         .then(data => {
-            window.saved_models = data;
-            // Atualiza a tabela com os modelos carregados
-            const currentModelType = document.getElementById('model-type-filter').value || 'logistic';
-            updateModelsTable(currentModelType);
+            // Flatten grouped response into array
+            window.saved_models = Object.values(data || {}).flat();
+            // Atualiza a tabela com todos os modelos
+            updateModelsTable();
         })
         .catch(error => {
             console.error('Erro ao carregar modelos:', error);
@@ -293,8 +274,7 @@ function fetchModels() {
 function generateDynamicTableHeader() {
     // Esta função é substituída pela updateModelsTable que já gera o cabeçalho
     // Mantemos esta função para compatibilidade com o código existente
-    const currentModelType = document.getElementById('model-type-filter').value || 'logistic';
-    updateModelsTable(currentModelType);
+    updateModelsTable();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -283,9 +283,20 @@ def create_model_from_config(config, training_params=None):
     if training_params is None:
         training_params = {}
     
-    # Extract parameters from config
-    n_estimators = int(config.get('rf_n_estimators', 10))
-    max_depth = int(config.get('rf_max_depth', 5))
+    # Extract parameters from config with robust parsing
+    def _to_int(val, default):
+        """Convert value to int, treating 'None'/'null'/'' as default."""
+        if val is None:
+            return default
+        if isinstance(val, str) and val.strip().lower() in ('none', 'null', ''):
+            return default
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return default
+
+    n_estimators = _to_int(config.get('rf_n_estimators', 10), 10)
+    max_depth = _to_int(config.get('rf_max_depth', 5), 5)
     learning_rate = float(training_params.get('learning_rate', 0.01))
     epochs = int(training_params.get('epochs', 100))
     batch_size = int(training_params.get('batch_size', 32))
