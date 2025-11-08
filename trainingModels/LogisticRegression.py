@@ -31,6 +31,9 @@ class KerasLogisticRegression:
         self.l2_regularization = l2_regularization
         self.model = None
         self.history = None
+        # Feature normalization parameters
+        self.feature_mean = None
+        self.feature_std = None
     
     def build_model(self, input_shape):
         """
@@ -65,8 +68,22 @@ class KerasLogisticRegression:
         
         self.model = model
         return model
+
+    def _normalize_features(self, X):
+        """
+        Normalize features using standardization (z-score).
+
+        Returns normalized features and sets mean/std for later inference.
+        """
+        X_arr = np.array(X, dtype=float)
+        if self.feature_mean is None or self.feature_std is None:
+            self.feature_mean = X_arr.mean(axis=0)
+            self.feature_std = X_arr.std(axis=0)
+            self.feature_std = np.where(self.feature_std == 0, 1.0, self.feature_std)
+        X_norm = (X_arr - self.feature_mean) / self.feature_std
+        return X_norm
     
-    def fit(self, X, y, validation_split=0.2):
+    def fit(self, X, y, validation_split=0.2, callbacks=None):
         """
         Train the logistic regression model
         
@@ -90,17 +107,21 @@ class KerasLogisticRegression:
         if np.any(y_formatted == -1):
             y_formatted = np.where(y_formatted == -1, 0, y_formatted)
         
+        # Normalize features
+        X_normalized = self._normalize_features(X)
+
         # Build model if not already built
         if self.model is None:
-            self.build_model(X.shape[1:])
+            self.build_model(X_normalized.shape[1:])
         
         # Train model
         self.history = self.model.fit(
-            X, y_formatted,
+            X_normalized, y_formatted,
             epochs=self.epochs,
             batch_size=self.batch_size,
             validation_split=validation_split,
-            verbose=0
+            verbose=0,
+            callbacks=callbacks or []
         )
         
         return self
@@ -122,8 +143,10 @@ class KerasLogisticRegression:
         if self.model is None:
             raise ValueError("Model has not been trained yet.")
         
+        # Normalize features using stored stats
+        X_normalized = (np.array(X, dtype=float) - self.feature_mean) / self.feature_std
         # Get probability predictions
-        y_prob = self.model.predict(X, verbose=0)
+        y_prob = self.model.predict(X_normalized, verbose=0)
         
         # Convert to binary predictions (0 or 1)
         y_pred = (y_prob > 0.5).astype(int)
@@ -150,8 +173,10 @@ class KerasLogisticRegression:
         if self.model is None:
             raise ValueError("Model has not been trained yet.")
         
+        # Normalize features
+        X_normalized = (np.array(X, dtype=float) - self.feature_mean) / self.feature_std
         # Get probability predictions
-        y_prob = self.model.predict(X, verbose=0)
+        y_prob = self.model.predict(X_normalized, verbose=0)
         
         # Return probabilities for both classes [P(y=0), P(y=1)]
         return np.hstack([1-y_prob, y_prob])
@@ -182,11 +207,34 @@ class KerasLogisticRegression:
         y_pred_formatted = np.where(y_pred == -1, 0, y_pred)
         
         # Calculate metrics
+        from sklearn.metrics import confusion_matrix
+        cm = confusion_matrix(y, y_pred, labels=[-1, 1])
+
+        # Training history diagnostics
+        history_dict = None
+        if self.history is not None and hasattr(self.history, 'history'):
+            h = self.history.history
+            history_dict = {
+                'loss': list(map(float, h.get('loss', []))),
+                'val_loss': list(map(float, h.get('val_loss', []))),
+                'accuracy': list(map(float, h.get('accuracy', []))),
+                'val_accuracy': list(map(float, h.get('val_accuracy', [])))
+            }
+
+        # Include a small sample of raw probabilities for inspection
+        try:
+            proba_sample = self.predict_proba(X[:10]).tolist()
+        except Exception:
+            proba_sample = None
+
         metrics = {
             'accuracy': float(accuracy_score(y, y_pred)),
             'precision': float(precision_score(y, y_pred, zero_division=0)),
             'recall': float(recall_score(y, y_pred, zero_division=0)),
-            'f1_score': float(f1_score(y, y_pred, zero_division=0))
+            'f1_score': float(f1_score(y, y_pred, zero_division=0)),
+            'confusion_matrix': cm.tolist(),
+            'history': history_dict,
+            'probabilities_sample': proba_sample
         }
         
         return metrics

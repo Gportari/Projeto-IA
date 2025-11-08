@@ -75,7 +75,7 @@ class KerasDecisionTree:
         self.model = model
         return model
     
-    def fit(self, X, y, validation_split=0.2):
+    def fit(self, X, y, validation_split=0.2, callbacks=None):
         """
         Train the Decision Tree-like model
         
@@ -116,7 +116,7 @@ class KerasDecisionTree:
             epochs=self.epochs,
             batch_size=self.batch_size,
             validation_split=validation_split,
-            callbacks=[early_stopping],
+            callbacks=[early_stopping] + (callbacks or []),
             verbose=0
         )
         
@@ -193,11 +193,35 @@ class KerasDecisionTree:
         y_pred = self.predict(X)
         
         # Calculate metrics
+        # Confusion matrix in original label space [-1, 1]
+        from sklearn.metrics import confusion_matrix
+        cm = confusion_matrix(y, y_pred, labels=[-1, 1])
+
+        # Training history diagnostics if available
+        history_dict = None
+        if self.history is not None and hasattr(self.history, 'history'):
+            h = self.history.history
+            history_dict = {
+                'loss': list(map(float, h.get('loss', []))),
+                'val_loss': list(map(float, h.get('val_loss', []))),
+                'accuracy': list(map(float, h.get('accuracy', []))),
+                'val_accuracy': list(map(float, h.get('val_accuracy', [])))
+            }
+
+        # Include a small sample of raw probabilities for inspection
+        try:
+            proba_sample = self.predict_proba(X[:10]).tolist()
+        except Exception:
+            proba_sample = None
+
         metrics = {
             'accuracy': float(accuracy_score(y, y_pred)),
             'precision': float(precision_score(y, y_pred, zero_division=0)),
             'recall': float(recall_score(y, y_pred, zero_division=0)),
-            'f1_score': float(f1_score(y, y_pred, zero_division=0))
+            'f1_score': float(f1_score(y, y_pred, zero_division=0)),
+            'confusion_matrix': cm.tolist(),
+            'history': history_dict,
+            'probabilities_sample': proba_sample
         }
         
         return metrics

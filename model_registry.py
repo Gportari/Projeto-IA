@@ -39,6 +39,8 @@ class ModelRegistry:
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         model_data = json.load(f)
+                        # Attach filename for frontend to identify and group
+                        model_data['filename'] = filename
                         models.append(model_data)
                 except Exception as e:
                     print(f"Erro ao carregar o arquivo {filename}: {e}")

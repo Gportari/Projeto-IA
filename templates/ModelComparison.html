@@ -84,7 +84,7 @@
             <!-- Parâmetros de Treinamento -->
             <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8">
                 <h2 class="text-xl font-semibold mb-4">Parâmetros de Treinamento</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label for="epochs" class="block mb-2">Épocas:</label>
                         <input type="number" id="epochs" value="100" min="1" max="1000" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
@@ -97,6 +97,14 @@
                         <label for="test-split" class="block mb-2">Divisão de Teste (%):</label>
                         <input type="number" id="test-split" value="20" min="10" max="50" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
                     </div>
+                    <div>
+                        <label for="train-mode" class="block mb-2">Modo de Treinamento:</label>
+                        <select id="train-mode" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
+                            <option value="both">Treinar Ambos</option>
+                            <option value="only-model1">Apenas Modelo 1</option>
+                            <option value="only-model2">Apenas Modelo 2</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -105,6 +113,58 @@
                 <button id="train-button" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg font-semibold">
                     Treinar e Comparar Modelos
                 </button>
+            </div>
+
+            <!-- Progresso de Treinamento -->
+            <div id="progress-section" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 hidden">
+                <!-- Progresso Modelo 1 -->
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4">Progresso - Modelo 1</h3>
+                    <div class="mb-2 flex justify-between text-sm">
+                        <span>Época: <span id="m1-epoch">0</span>/<span id="m1-total">0</span></span>
+                        <span>ETA: <span id="m1-eta">--</span></span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-[#2a3746] rounded-full h-2 mb-3">
+                        <div id="m1-progress" class="bg-blue-500 h-2 rounded-full" style="width:0%"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="font-medium">Loss</p>
+                            <p id="m1-loss" class="text-xl font-bold">--</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Accuracy</p>
+                            <p id="m1-acc" class="text-xl font-bold">--</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button id="cancel-model1" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded">Cancelar Modelo 1</button>
+                    </div>
+                </div>
+                <!-- Progresso Modelo 2 -->
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4">Progresso - Modelo 2</h3>
+                    <div class="mb-2 flex justify-between text-sm">
+                        <span>Época: <span id="m2-epoch">0</span>/<span id="m2-total">0</span></span>
+                        <span>ETA: <span id="m2-eta">--</span></span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-[#2a3746] rounded-full h-2 mb-3">
+                        <div id="m2-progress" class="bg-green-500 h-2 rounded-full" style="width:0%"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="font-medium">Loss</p>
+                            <p id="m2-loss" class="text-xl font-bold">--</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Accuracy</p>
+                            <p id="m2-acc" class="text-xl font-bold">--</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button id="cancel-model2" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded">Cancelar Modelo 2</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Área de Resultados -->
@@ -165,6 +225,122 @@
                     <h3 class="text-lg font-semibold mb-4">Comparação de Métricas</h3>
                     <div id="comparison-chart" class="h-64">
                         <!-- Canvas para o gráfico será inserido via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Matrizes de Confusão -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-4">Matriz de Confusão — Modelo 1</h3>
+                        <table class="w-full text-center text-sm">
+                            <thead>
+                                <tr>
+                                    <th></th><th>Prev -1</th><th>Prev 1</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cm1">
+                                <tr><td>Real -1</td><td>--</td><td>--</td></tr>
+                                <tr><td>Real 1</td><td>--</td><td>--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-4">Matriz de Confusão — Modelo 2</h3>
+                        <table class="w-full text-center text-sm">
+                            <thead>
+                                <tr>
+                                    <th></th><th>Prev -1</th><th>Prev 1</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cm2">
+                                <tr><td>Real -1</td><td>--</td><td>--</td></tr>
+                                <tr><td>Real 1</td><td>--</td><td>--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Curvas de Treinamento -->
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Curvas de Treinamento</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <canvas id="loss-chart" height="200"></canvas>
+                        </div>
+                        <div>
+                            <canvas id="acc-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teste e Predição -->
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Testar Modelos</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label for="test-x1" class="block mb-1">x₁</label>
+                            <input id="test-x1" type="number" step="any" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
+                        </div>
+                        <div>
+                            <label for="test-x2" class="block mb-1">x₂</label>
+                            <input id="test-x2" type="number" step="any" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
+                        </div>
+                        <div>
+                            <label for="test-x3" class="block mb-1">x₃</label>
+                            <input id="test-x3" type="number" step="any" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
+                        </div>
+                        <div>
+                            <label for="test-label" class="block mb-1">d (opcional)</label>
+                            <input id="test-label" type="number" step="any" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]" placeholder="-1 ou 1">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-4">
+                        <button id="test-model1" class="bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded">Testar Modelo 1</button>
+                        <button id="test-model2" class="bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded">Testar Modelo 2</button>
+                    </div>
+                    <div id="test-results" class="text-sm">
+                        <p class="font-medium">Predição:</p>
+                        <p id="prediction-output" class="text-xl font-bold">--</p>
+                        <div id="test-metrics" class="grid grid-cols-3 gap-4 mt-4 hidden">
+                            <div>
+                                <p class="font-medium">Acurácia</p>
+                                <p id="test-accuracy" class="text-lg font-bold">--</p>
+                            </div>
+                            <div>
+                                <p class="font-medium">Precisão</p>
+                                <p id="test-precision" class="text-lg font-bold">--</p>
+                            </div>
+                            <div>
+                                <p class="font-medium">Recall</p>
+                                <p id="test-recall" class="text-lg font-bold">--</p>
+                            </div>
+                        </div>
+                        <div id="test-confusion" class="mt-4 hidden">
+                            <p class="font-medium">Matriz de Confusão (Teste):</p>
+                            <table class="text-sm">
+                                <tbody id="test-cm">
+                                    <tr><td></td><td>Prev -1</td><td>Prev 1</td></tr>
+                                    <tr><td>Real -1</td><td>--</td><td>--</td></tr>
+                                    <tr><td>Real 1</td><td>--</td><td>--</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="test-proba" class="mt-4 hidden">
+                            <p class="font-medium">Probabilidades (y=1):</p>
+                            <p id="test-proba-output" class="text-lg font-bold">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exportar e Histórico -->
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Resultados e Histórico</h3>
+                    <div class="flex gap-4 mb-4">
+                        <button id="export-results" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded">Exportar Resultados</button>
+                        <button id="clear-history" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">Limpar Histórico</button>
+                    </div>
+                    <div>
+                        <ul id="history-list" class="list-disc pl-5 text-sm"></ul>
                     </div>
                 </div>
             </div>

@@ -97,7 +97,7 @@ class KerasSVC:
         self.model = model
         return model
     
-    def fit(self, X, y, validation_split=0.2):
+    def fit(self, X, y, validation_split=0.2, callbacks=None):
         """
         Train the SVC-like model
         
@@ -134,7 +134,8 @@ class KerasSVC:
             epochs=self.epochs,
             batch_size=self.batch_size,
             validation_split=validation_split,
-            verbose=0
+            verbose=0,
+            callbacks=callbacks or []
         )
         
         return self
@@ -199,6 +200,17 @@ class KerasSVC:
         y_pred = np.where(y_pred == 0, -1, 1)
         
         return y_pred.flatten()
+
+    def predict_proba(self, X):
+        """
+        Predict class probabilities using the sigmoid output.
+        Returns array of shape (n_samples, 2): [P(-1), P(1)].
+        """
+        if self.model is None:
+            raise ValueError("Model has not been trained yet.")
+        X_normalized = (np.array(X, dtype=float) - self.feature_mean) / self.feature_std
+        y_prob = self.model.predict(X_normalized, verbose=0)
+        return np.hstack([1 - y_prob, y_prob])
     
     def predict_proba(self, X):
         """
@@ -245,12 +257,35 @@ class KerasSVC:
         # Get predictions
         y_pred = self.predict(X)
         
+        from sklearn.metrics import confusion_matrix
+        cm = confusion_matrix(y, y_pred, labels=[-1, 1])
+
+        # Training history diagnostics
+        history_dict = None
+        if self.history is not None and hasattr(self.history, 'history'):
+            h = self.history.history
+            history_dict = {
+                'loss': list(map(float, h.get('loss', []))),
+                'val_loss': list(map(float, h.get('val_loss', []))),
+                'accuracy': list(map(float, h.get('accuracy', []))),
+                'val_accuracy': list(map(float, h.get('val_accuracy', [])))
+            }
+
+        # Include a small sample of raw probabilities
+        try:
+            proba_sample = self.predict_proba(X[:10]).tolist()
+        except Exception:
+            proba_sample = None
+
         # Calculate metrics
         metrics = {
             'accuracy': float(accuracy_score(y, y_pred)),
             'precision': float(precision_score(y, y_pred, zero_division=0)),
             'recall': float(recall_score(y, y_pred, zero_division=0)),
-            'f1_score': float(f1_score(y, y_pred, zero_division=0))
+            'f1_score': float(f1_score(y, y_pred, zero_division=0)),
+            'confusion_matrix': cm.tolist(),
+            'history': history_dict,
+            'probabilities_sample': proba_sample
         }
         
         return metrics
