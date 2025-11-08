@@ -67,6 +67,25 @@
             </div>
 
             <!-- Parâmetros de Treinamento -->
+            <!-- Seleção de Dataset -->
+            <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8 card">
+                <h2 class="text-xl font-semibold mb-2">Dataset para Treino</h2>
+                <p class="text-sm mb-4 text-gray-600 dark:text-[#92adc9]">Selecione um arquivo enviado na página Dataset. Este dataset será usado para treinar os modelos.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="dataset-select" class="block mb-2">Arquivo Excel (XLSX ou CSV):</label>
+                        <select id="dataset-select" class="w-full p-2 border rounded dark:bg-[#2a3746] dark:border-[#3a4756]">
+                            <option value="">Selecione um dataset</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 flex items-center gap-3">
+                        <a href="/Dataset.html" target="_blank" class="inline-flex items-center justify-center px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 dark:bg-[#2a3746] dark:hover:bg-[#3a4756]">Gerenciar Datasets</a>
+                        <span class="text-xs text-gray-500 dark:text-[#92adc9]">Abra em outra aba para enviar/renomear datasets.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parâmetros de Treinamento -->
             <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8 card">
                 <h2 class="text-xl font-semibold mb-4">Parâmetros de Treinamento</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

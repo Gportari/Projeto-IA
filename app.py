@@ -471,7 +471,121 @@ def api_train_start():
             'eta_seconds': None,
             'cancel_requested': False
         }
-    _start_training_thread(job_id, payload['model']['type'], payload['model']['config'], payload['dataset'], payload.get('training_params', {}))
+    # Resolver dataset: pode ser enviado como objeto (features/labels) ou como arquivo registrado
+    dataset_payload = payload.get('dataset')
+    dataset_file = payload.get('dataset_file')
+
+    def _load_dataset_from_file(filename):
+        try:
+            base = os.path.basename(filename)
+            base_dir = os.path.abspath(datasets_dir)
+            target_path = os.path.abspath(os.path.join(base_dir, base))
+            if not target_path.startswith(base_dir):
+                raise ValueError('Caminho inválido para dataset.')
+            if not os.path.isfile(target_path):
+                raise ValueError('Arquivo de dataset não encontrado.')
+            ext = os.path.splitext(base)[1].lower()
+            # Leitura com pandas
+            import pandas as pd
+            if ext == '.xlsx':
+                df = pd.read_excel(target_path)
+            elif ext == '.csv':
+                df = pd.read_csv(target_path)
+            else:
+                raise ValueError('Formato de dataset não suportado. Use .xlsx ou .csv')
+
+            # Normalizar nomes e tentar identificar colunas de forma flexível
+            original_cols = list(df.columns)
+            norm_map = {}
+            for c in original_cols:
+                key = str(c).strip().lower()
+                key = key.replace(' ', '')
+                key = key.replace('_', '')
+                # padronizar x_1 -> x1, x-1 -> x1 etc.
+                key = key.replace('-', '')
+                norm_map[key] = c
+
+            # Candidatos para a coluna de rótulo
+            label_candidates = ['d', 'diagnostico', 'diagnóstico', 'label', 'class', 'target', 'y']
+            label_col = None
+            for k in label_candidates:
+                if k in norm_map:
+                    label_col = norm_map[k]
+                    break
+            # Se não achar, assumir a última coluna como label
+            if label_col is None:
+                label_col = original_cols[-1]
+
+            # Candidatos para features (x1,x2,x3) se existirem
+            x_cols = []
+            for k in ['x1','x2','x3','x4','x5']:
+                if k in norm_map and norm_map[k] != label_col:
+                    x_cols.append(norm_map[k])
+
+            # Se não houver colunas x*, pegar todas exceto label e manter as numéricas
+            if not x_cols:
+                feature_candidates = [c for c in original_cols if c != label_col]
+                # Tentar converter para numérico para filtrar
+                df_num = df[feature_candidates].apply(pd.to_numeric, errors='coerce')
+                # Selecionar colunas com pelo menos algum valor numérico válido
+                valid_feature_cols = [c for c in feature_candidates if df_num[c].notna().any()]
+                # Se ainda vazio, erro
+                if not valid_feature_cols:
+                    raise ValueError('Não foram encontradas colunas numéricas para features.')
+                x_cols = valid_feature_cols
+
+            # Construir dataframe numérico final e limpar NaNs
+            df_features = df[x_cols].apply(pd.to_numeric, errors='coerce')
+            df_labels_raw = df[label_col]
+            mask_valid = df_features.notna().all(axis=1) & df_labels_raw.notna()
+            df_features = df_features[mask_valid]
+            df_labels_raw = df_labels_raw[mask_valid]
+
+            if len(df_features) == 0:
+                raise ValueError('Dataset sem linhas válidas após limpeza.')
+
+            # Converter labels em {-1,1}
+            def _to_label(v):
+                if isinstance(v, bool):
+                    return 1 if v else -1
+                try:
+                    f = float(v)
+                    # Mapear 0/1, -1/1 etc.
+                    if f in (0.0, 0):
+                        return -1
+                    return 1 if f > 0 else -1
+                except Exception:
+                    s = str(v).strip().lower()
+                    neg = {'-1','neg','negativo','no','não','nao','false','f'}
+                    pos = {'1','pos','positivo','yes','sim','true','t'}
+                    if s in neg:
+                        return -1
+                    if s in pos:
+                        return 1
+                    # fallback: qualquer outro texto vira 1
+                    return 1
+
+            labels = [ _to_label(v) for v in df_labels_raw.tolist() ]
+            features = df_features.values.tolist()
+
+            return { 'features': features, 'labels': labels }
+        except Exception as e:
+            raise e
+
+    if dataset_file and not dataset_payload:
+        try:
+            dataset_payload = _load_dataset_from_file(dataset_file)
+        except Exception as e:
+            with TRAIN_JOBS_LOCK:
+                TRAIN_JOBS[job_id].update({ 'status': 'error', 'error': f'Dataset inválido: {str(e)}' })
+            return jsonify({'error': f'Dataset inválido: {str(e)}'}), 400
+
+    if not dataset_payload:
+        with TRAIN_JOBS_LOCK:
+            TRAIN_JOBS[job_id].update({ 'status': 'error', 'error': 'Dataset não fornecido.' })
+        return jsonify({'error': 'Dataset não fornecido.'}), 400
+
+    _start_training_thread(job_id, payload['model']['type'], payload['model']['config'], dataset_payload, payload.get('training_params', {}))
     return jsonify({'job_id': job_id})
 
 @app.route('/api/train/status/<job_id>', methods=['GET'])

@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize model configuration dropdowns
     fetchModels();
+    fetchDatasetsForTraining();
 
     // Event listeners for model type changes
     document.getElementById('model1-type').addEventListener('change', function() {
@@ -65,6 +66,26 @@ async function fetchModels() {
         updateModelConfigs('model2-type', 'model2-config');
     } catch (error) {
         console.error('Error fetching models:', error);
+    }
+}
+
+// Buscar datasets e preencher o seletor de treino
+async function fetchDatasetsForTraining() {
+    try {
+        const res = await fetch('/api/datasets');
+        if (!res.ok) throw new Error('Falha ao listar datasets');
+        const items = await res.json();
+        const sel = document.getElementById('dataset-select');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione um dataset</option>';
+        (Array.isArray(items) ? items : []).forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.name; // filename
+            opt.textContent = item.display_name || (item.name || '').replace(/\.(csv|xlsx)$/i, '');
+            sel.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Erro ao carregar datasets:', e);
     }
 }
 
@@ -137,6 +158,7 @@ async function trainAndCompareModels() {
     const learningRate = document.getElementById('learning-rate').value;
     const testSplit = document.getElementById('test-split').value;
     const mode = document.getElementById('train-mode') ? document.getElementById('train-mode').value : 'both';
+    const datasetFile = (document.getElementById('dataset-select') || { value: '' }).value;
 
     // Validate selections according to mode
     if (mode === 'both' && (!model1Config || !model2Config)) {
@@ -149,6 +171,10 @@ async function trainAndCompareModels() {
     }
     if (mode === 'only-model2' && !model2Config) {
         alert('Selecione uma configuração para o Modelo 2.');
+        return;
+    }
+    if (!datasetFile) {
+        alert('Selecione um dataset (arquivo Excel/CSV) para treinar.');
         return;
     }
 
@@ -179,8 +205,7 @@ async function trainAndCompareModels() {
     `;
 
     try {
-        // Extract dataset
-        const dataset = extractDatasetFromTable();
+        // Dataset será carregado no backend com base no arquivo selecionado
         // Sanitize numeric inputs
         let ep = parseInt(epochs, 10);
         if (!Number.isFinite(ep) || ep <= 0) {
@@ -205,10 +230,19 @@ async function trainAndCompareModels() {
                 body: JSON.stringify({
                     model: { type, config },
                     training_params: trainingParams,
-                    dataset
+                    dataset_file: datasetFile
                 })
             });
-            if (!res.ok) throw new Error('Falha ao iniciar o treinamento');
+            if (!res.ok) {
+                let msg = 'Falha ao iniciar o treinamento';
+                try {
+                    const err = await res.json();
+                    if (err && err.error) msg = err.error;
+                } catch (_) {
+                    try { msg = await res.text(); } catch (__) {}
+                }
+                throw new Error(msg);
+            }
             const data = await res.json();
             state.jobs[which] = data.job_id;
             return data.job_id;
@@ -241,7 +275,7 @@ async function trainAndCompareModels() {
 
     } catch (error) {
         console.error('Error training models:', error);
-        alert('Ocorreu um erro ao treinar os modelos. Por favor, tente novamente.');
+        alert(`Erro ao treinar: ${error.message || error}`);
     } finally {
         trainButton.textContent = originalButtonText;
         trainButton.disabled = false;
