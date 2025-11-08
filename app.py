@@ -28,17 +28,27 @@ class EpochProgressCallback(keras.callbacks.Callback):
         self.total_epochs = total_epochs
         self.start_time = time.time()
         self.last_epoch_time = self.start_time
+        # Track aggregated progress across multiple Keras fit() sessions
+        self.completed_epochs_so_far = 0
+        self._last_epoch_in_run = -1
+
+    def on_train_begin(self, logs=None):
+        # Reset per-run epoch tracker when a new fit() starts
+        self._last_epoch_in_run = -1
 
     def on_epoch_end(self, epoch, logs=None):
+        # Compute global epoch number accounting for multiple fit() calls
+        self._last_epoch_in_run = epoch
+        global_epoch = self.completed_epochs_so_far + (epoch + 1)
         now = time.time()
         elapsed = now - self.start_time
-        avg_epoch_time = elapsed / (epoch + 1)
-        remaining_epochs = self.total_epochs - (epoch + 1)
+        avg_epoch_time = elapsed / max(1, global_epoch)
+        remaining_epochs = max(0, self.total_epochs - global_epoch)
         eta_seconds = max(0, int(avg_epoch_time * remaining_epochs))
         with TRAIN_JOBS_LOCK:
             job = TRAIN_JOBS.get(self.job_id, {})
             job.update({
-                'epoch': epoch + 1,
+                'epoch': global_epoch,
                 'total_epochs': self.total_epochs,
                 'loss': float(logs.get('loss', 0.0)) if logs else 0.0,
                 'accuracy': float(logs.get('accuracy', 0.0)) if logs else 0.0,
@@ -52,6 +62,11 @@ class EpochProgressCallback(keras.callbacks.Callback):
                 job['status'] = 'cancelling'
                 self.model.stop_training = True
             TRAIN_JOBS[self.job_id] = job
+
+    def on_train_end(self, logs=None):
+        # Accumulate the number of epochs completed in this run
+        if self._last_epoch_in_run is not None and self._last_epoch_in_run >= 0:
+            self.completed_epochs_so_far += (self._last_epoch_in_run + 1)
 
 def _create_model_instance(model_type, model_config, training_params):
     # Factory to get model instance for callback-driven training
@@ -86,7 +101,7 @@ def _start_training_thread(job_id, model_type, config_file, dataset, training_pa
             # Create model
             model_config = _load_config_by_filename(config_file)
             model = _create_model_instance(model_type, model_config, training_params)
-            # Safely parse epochs for callback ETA
+            # Safely parse epochs and expected total
             raw_ep = training_params.get('epochs', 50)
             try:
                 epochs = int(raw_ep)
@@ -94,7 +109,25 @@ def _start_training_thread(job_id, model_type, config_file, dataset, training_pa
                     epochs = 50
             except Exception:
                 epochs = 50
-            callbacks = [EpochProgressCallback(job_id, epochs)]
+
+            # Estimate total epochs for progress (account for RF multiple estimators)
+            def _safe_int(v, d):
+                try:
+                    if v is None:
+                        return d
+                    if isinstance(v, str) and v.strip().lower() in ('none', 'null', ''):
+                        return d
+                    iv = int(v)
+                    return iv if iv > 0 else d
+                except Exception:
+                    return d
+
+            total_epochs_est = epochs
+            if model_type == 'rf':
+                n_est = _safe_int(model_config.get('rf_n_estimators'), 10)
+                total_epochs_est = epochs * n_est
+
+            callbacks = [EpochProgressCallback(job_id, total_epochs_est)]
 
             # Train with callbacks
             model.fit(X_train, y_train, validation_split=float(training_params.get('validation_split', 0.2)), callbacks=callbacks)
@@ -142,15 +175,8 @@ if not os.path.exists(models_dir):
 
 @app.route('/')
 def home():
-    return render_template('Dashboard.html')
-
-@app.route('/dashboard')
-def dashboard():
-    return render_template('Dashboard.html')
-
-@app.route('/Dashboard.html')
-def Dashboard():
-    return render_template('Dashboard.html')
+    # Página inicial passa a ser Models
+    return render_template('Models.html', model_list=registry.listar_modelos())
 
 @app.route('/Models.html', methods=['GET'])
 def models():
@@ -199,6 +225,18 @@ def api_train_start():
             total_epochs = 50
     except Exception:
         total_epochs = 50
+    # Adjust total epochs for Random Forest by multiplying n_estimators
+    try:
+        if payload.get('model', {}).get('type') == 'rf':
+            cfg = _load_config_by_filename(payload['model']['config'])
+            n_est = cfg.get('rf_n_estimators', 10)
+            if isinstance(n_est, str):
+                n_est = 10 if n_est.strip().lower() in ('none', 'null', '') else int(n_est)
+            if not isinstance(n_est, int) or n_est <= 0:
+                n_est = 10
+            total_epochs = total_epochs * n_est
+    except Exception:
+        pass
     with TRAIN_JOBS_LOCK:
         TRAIN_JOBS[job_id] = {
             'status': 'queued',

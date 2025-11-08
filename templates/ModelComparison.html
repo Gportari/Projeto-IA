@@ -1,33 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparação de Modelos - Projeto IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link rel="stylesheet" href="/static/style-models.css">
+    <link rel="stylesheet" href="/static/theme.css">
 </head>
 <body class="bg-gray-100 dark:bg-[#121e2d] text-gray-800 dark:text-[#e3e8f0]">
     <div class="flex h-screen">
-        <!-- Sidebar de Navegação -->
-        <div class="w-64 bg-white dark:bg-[#1a2c42] shadow-md">
-            <div class="p-4 border-b border-gray-200 dark:border-[#2a3746]">
-                <h2 class="text-xl font-semibold">Projeto IA</h2>
-            </div>
-            <nav class="p-4">
-                <ul>
-                    <li class="mb-2">
-                        <a href="/Dashboard.html" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-[#2a3746]">Dashboard</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="/Models.html" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-[#2a3746]">Modelos</a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="/ModelComparison.html" class="block p-2 rounded bg-blue-100 dark:bg-blue-900">Comparação de Modelos</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+        <!-- Sidebar reutilizável -->
+        <div id="sidebar"></div>
 
         <!-- Conteúdo Principal -->
         <main class="flex-1 overflow-y-auto p-6">
@@ -39,7 +24,7 @@
             <!-- Seleção de Modelos -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Modelo 1 -->
-                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md card">
                     <h2 class="text-xl font-semibold mb-4">Modelo 1</h2>
                     <div class="mb-4">
                         <label for="model1-type" class="block mb-2">Tipo de Modelo:</label>
@@ -60,7 +45,7 @@
                 </div>
 
                 <!-- Modelo 2 -->
-                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md card">
                     <h2 class="text-xl font-semibold mb-4">Modelo 2</h2>
                     <div class="mb-4">
                         <label for="model2-type" class="block mb-2">Tipo de Modelo:</label>
@@ -82,7 +67,7 @@
             </div>
 
             <!-- Parâmetros de Treinamento -->
-            <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8">
+            <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md mb-8 card">
                 <h2 class="text-xl font-semibold mb-4">Parâmetros de Treinamento</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
@@ -118,7 +103,7 @@
             <!-- Progresso de Treinamento -->
             <div id="progress-section" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 hidden">
                 <!-- Progresso Modelo 1 -->
-                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md card">
                     <h3 class="text-lg font-semibold mb-4">Progresso - Modelo 1</h3>
                     <div class="mb-2 flex justify-between text-sm">
                         <span>Época: <span id="m1-epoch">0</span>/<span id="m1-total">0</span></span>
@@ -142,7 +127,7 @@
                     </div>
                 </div>
                 <!-- Progresso Modelo 2 -->
-                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md">
+                <div class="bg-white dark:bg-[#1f2d3a] p-6 rounded-lg shadow-md card">
                     <h3 class="text-lg font-semibold mb-4">Progresso - Modelo 2</h3>
                     <div class="mb-2 flex justify-between text-sm">
                         <span>Época: <span id="m2-epoch">0</span>/<span id="m2-total">0</span></span>
@@ -396,6 +381,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="/static/components/sidebar-nav.js"></script>
+    <script>initSidebarNav();</script>
     <script src="/static/model_comparison.js"></script>
 </body>
 </html>
