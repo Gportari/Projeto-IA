@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const forms = {
         logistic: document.getElementById('form-logistic'),
         knn: document.getElementById('form-knn'),
-        svc: document.getElementById('form-svc'),
+        svm: document.getElementById('form-svm'),
         tree: document.getElementById('form-tree'),
         rf: document.getElementById('form-rf')
     };
@@ -70,8 +70,8 @@ window.model_list = {
             "knn_p"
         ]
     },
-    "svc": {
-        "name": "SVC",
+    "svm": {
+        "name": "SVM",
         "fixed_cols": [
             "ID_Teste",
             "Estrategia_Preprocessamento",
@@ -145,7 +145,7 @@ function updateModelsTable(modelType) {
     const modelTypeMap = {
         'logistic': 'Regressão Logística',
         'knn': 'KNN',
-        'svc': 'SVC',
+        'svm': 'SVM',
         'tree': 'DecisionTreeClassifier',
         'rf': 'RandomForestClassifier'
     };
@@ -236,7 +236,7 @@ function switchModelFormAndRenderTable() {
         'logistic': document.getElementById('form-logistic'),
         'knn': document.getElementById('form-knn'),
         // ... inclua os outros 3 forms
-        'svc': document.getElementById('form-svc'),
+        'svm': document.getElementById('form-svm'),
         'tree': document.getElementById('form-tree'),
         'rf': document.getElementById('form-rf'),
     };

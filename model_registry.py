@@ -83,11 +83,11 @@ class ModelRegistry:
         self.model_list.insert(0, saved_model)
         return saved_model
 
-    def cadastrar_svc(self, nome_teste, estrategia_preprocessamento, estrategia_validacao,
+    def cadastrar_svm(self, nome_teste, estrategia_preprocessamento, estrategia_validacao,
                       C, kernel, gamma, degree, class_weight, probability):
         model_data = {
             'nome_teste': nome_teste,
-            'nome_modelo': 'SVC',
+            'nome_modelo': 'SVM',
             'estrategia_preprocessamento': estrategia_preprocessamento,
             'estrategia_validacao': estrategia_validacao,
             'svm_C': C,
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                                   1.0, 1.0, "liblinear", "balanced", 100)
     registry.cadastrar_knn("Teste 2", "StandardScaler", "StratifiedKFold",
                             5, "uniform", "minkowski", 2)
-    registry.cadastrar_svc("Teste 3", "StandardScaler", "StratifiedKFold",
+    registry.cadastrar_svm("Teste 3", "StandardScaler", "StratifiedKFold",
                             1.0, "linear", "auto", 3, "balanced", True)
     registry.cadastrar_tree("Teste 4", "StandardScaler", "StratifiedKFold",
                             "gini", 5, 2, 1, "balanced")

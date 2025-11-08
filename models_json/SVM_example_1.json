@@ -1,8 +1,8 @@
 {
     "id": "34567890-3456-7890-3456-789034567890",
     "timestamp": "2025-10-31T22:32:00.000000",
-    "nome_teste": "Teste SVC 1",
-    "nome_modelo": "SVC",
+    "nome_teste": "Teste SVM 1",
+    "nome_modelo": "SVM",
     "estrategia_preprocessamento": "StandardScaler",
     "estrategia_validacao": "Train-Test Split (80/20)",
     "svm_C": "1.0",

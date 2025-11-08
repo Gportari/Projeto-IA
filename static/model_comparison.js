@@ -80,7 +80,7 @@ function updateModelConfigs(typeSelectId, configSelectId) {
     const modelTypeMap = {
         'logistic': 'Regressão Logística',
         'knn': 'KNN',
-        'svc': 'SVC',
+        'svm': 'SVM',
         'tree': 'Decision Tree',
         'rf': 'Random Forest'
     };
@@ -106,7 +106,7 @@ function showModelMetadata(typeSelectId, configSelectId, titleElementId) {
     const map = {
         'logistic': 'Regressão Logística',
         'knn': 'KNN',
-        'svc': 'SVC',
+        'svm': 'SVM',
         'tree': 'Decision Tree',
         'rf': 'Random Forest'
     };

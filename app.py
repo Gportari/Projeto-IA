@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 # Import Keras-based model implementations
 from trainingModels.LogisticRegression import train_and_evaluate as train_logistic
 from trainingModels.KNN import train_and_evaluate as train_knn
-from trainingModels.SVC import train_and_evaluate as train_svc
+from trainingModels.SVM import train_and_evaluate as train_svm
 from trainingModels.DecisionTree import train_and_evaluate as train_tree
 from trainingModels.RandomForest import train_and_evaluate as train_rf
 
@@ -59,8 +59,8 @@ def _create_model_instance(model_type, model_config, training_params):
         from trainingModels.LogisticRegression import create_model_from_config as _create
     elif model_type == 'knn':
         from trainingModels.KNN import create_model_from_config as _create
-    elif model_type == 'svc':
-        from trainingModels.SVC import create_model_from_config as _create
+    elif model_type == 'svm':
+        from trainingModels.SVM import create_model_from_config as _create
     elif model_type == 'tree':
         from trainingModels.DecisionTree import create_model_from_config as _create
     elif model_type == 'rf':
@@ -319,8 +319,8 @@ def cadastrar_modelo():
             request.form.get('knn_metric'),
             request.form.get('knn_p')
         )
-    elif nome_modelo == 'SVC':
-        registry.cadastrar_svc(
+    elif nome_modelo == 'SVM':
+        registry.cadastrar_svm( 
             nome_teste,
             request.form.get('estrategia_preprocessamento'),
             request.form.get('estrategia_validacao'),
@@ -395,8 +395,8 @@ def train_and_evaluate_model(model_info, X_train, X_test, y_train, y_test, train
         results, _ = train_logistic(model_config, X_train, X_test, y_train, y_test, training_params)
     elif model_type == 'knn':
         results, _ = train_knn(model_config, X_train, X_test, y_train, y_test, training_params)
-    elif model_type == 'svc':
-        results, _ = train_svc(model_config, X_train, X_test, y_train, y_test, training_params)
+    elif model_type == 'svm':
+        results, _ = train_svm(model_config, X_train, X_test, y_train, y_test, training_params)
     elif model_type == 'tree':
         results, _ = train_tree(model_config, X_train, X_test, y_train, y_test, training_params)
     elif model_type == 'rf':
@@ -414,7 +414,7 @@ def load_model_config(model_type, config_file):
     model_type_map = {
         'logistic': 'Regressão Logística',
         'knn': 'KNN',
-        'svc': 'SVC',
+        'svm': 'SVM',
         'tree': 'Decision Tree',
         'rf': 'Random Forest'
     }
